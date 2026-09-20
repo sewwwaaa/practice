@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEGIS // Enterprise Cyber Security Services & Threat Defense</title>
+  <meta name="description" content="Next-generation cybersecurity services: Offensive VAPT, 24/7 Managed SOC, Red Teaming, Cloud Zero-Trust Architecture, and Emergency Incident Response.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="cyber-theme">
+  <!-- Canvas Background Effect -->
+  <canvas id="cyber-canvas"></canvas>
+  
+  <!-- Top Alert Banner -->
+  <div class="threat-ticker-bar" id="threat-ticker">
+    <div class="ticker-label">
+      <span class="pulse-dot red"></span>
+      <span class="mono-label">LIVE THREAT FEED:</span>
+    </div>
+    <div class="ticker-content" id="live-ticker-text">
+      [DEFCON 3] Initializing satellite sensor telemetry... Real-time SOC scrubbing nodes active across 14 global data centers.
+    </div>
+    <div class="ticker-badge mono-label">
+      <i class="fa-solid fa-satellite-dish"></i> SOC 24/7 ONLINE
+    </div>
+  </div>
+
+  <!-- Navigation Header -->
+  <header class="navbar-container">
+    <nav class="navbar" aria-label="Main Navigation">
+      <a href="#hero" class="brand-logo" id="logo-link">
+        <div class="logo-icon">
+          <i class="fa-solid fa-shield-cat"></i>
+        </div>
+        <div class="logo-text">
+          <span class="brand-name">AEGIS<span class="cyan-dot">.</span>SEC</span>
+          <span class="brand-tagline">CYBER DEFENSE CORP</span>
+        </div>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#threat-radar" class="nav-link">Threat Radar</a></li>
+        <li><a href="#risk-calculator" class="nav-link">Risk Calculator</a></li>
+        <li><a href="#terminal-demo" class="nav-link">Scanner Demo</a></li>
+        <li><a href="#compliance" class="nav-link">Compliance</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="#contact" class="btn btn-emergency" id="nav-emergency-btn">
+          <span class="emergency-icon"><i class="fa-solid fa-phone-volume"></i></span>
+          <span class="btn-text">Incident Hotline</span>
+        </a>
+        <button class="mobile-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="status-pill animate-fade-in">
+            <span class="status-indicator"></span>
+            <span class="mono-code">AEGIS DEFENSE SYSTEM v4.8 // 100% OPERATIONAL</span>
+          </div>
+
+          <h1 class="hero-title animate-fade-in-up">
+            Elite Offensive & <br>
+            <span class="gradient-text">Autonomous Cyber Defense</span>
+          </h1>
+
+          <p class="hero-description animate-fade-in-up delay-1">
+            We safeguard critical enterprise infrastructure, financial conduits, and cloud perimeters against sophisticated APT groups, zero-day exploits, and destructive ransomware campaigns.
+          </p>
+
+          <div class="hero-cta-group animate-fade-in-up delay-2">
+            <a href="#risk-calculator" class="btn btn-primary" id="hero-audit-btn">
+              <i class="fa-solid fa-calculator"></i> Calculate Cyber Risk
+            </a>
+            <a href="#services" class="btn btn-secondary" id="hero-services-btn">
+              <i class="fa-solid fa-layer-group"></i> Explore Services
+            </a>
+          </div>
+
+          <!-- Quick Stats Bar -->
+          <div class="stats-grid animate-fade-in-up delay-3">
+            <div class="stat-card">
+              <div class="stat-number" data-target="99.99">99.99%</div>
+              <div class="stat-label">Breach Containment Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" data-target="15">&lt; 15 min</div>
+              <div class="stat-label">Emergency Incident SLA</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" data-target="1840000">1.8M+</div>
+              <div class="stat-label">Threats Blocked / Day</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" data-target="500">500+</div>
+              <div class="stat-label">Enterprise Audits Executed</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Cyber Visual Widget -->
+        <div class="hero-visual animate-glow">
+          <div class="hologram-card">
+            <div class="card-header">
+              <div class="window-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+              </div>
+              <span class="mono-code window-title">AEGIS // LIVE_MONITOR.sh</span>
+              <span class="badge-live"><i class="fa-solid fa-circle"></i> SHIELD ACTIVE</span>
+            </div>
+            <div class="hologram-body">
+              <div class="shield-circle-wrap">
+                <div class="shield-core">
+                  <i class="fa-solid fa-shield-virus"></i>
+                </div>
+                <div class="radar-pulse"></div>
+                <div class="radar-pulse delay"></div>
+              </div>
+              
+              <div class="telemetry-box">
+                <div class="telemetry-row">
+                  <span class="telemetry-name">AI THREAT INFERENCE</span>
+                  <span class="telemetry-val text-cyan">99.8% CERTAINTY</span>
+                </div>
+                <div class="telemetry-row">
+                  <span class="telemetry-name">ZERO-DAY RECONNAISSANCE</span>
+                  <span class="telemetry-val text-green">ARMED & PROTECTED</span>
+                </div>
+                <div class="telemetry-row">
+                  <span class="telemetry-name">ENCRYPTED TELEMETRY</span>
+                  <span class="telemetry-val text-purple">AES-256-GCM / TLS 1.3</span>
+                </div>
+              </div>
+
+              <div class="live-activity-log" id="hero-log-stream">
+                <div class="log-line text-muted">[11:42:01] Ingesting telemetry from 1,240 AWS/GCP clusters...</div>
+                <div class="log-line text-cyan">[11:42:03] Bypassed honeypot probe from AS9012 - Blocked.</div>
+                <div class="log-line text-green">[11:42:05] Kernel integrity verified: SHA-512 Match.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section section-padding" id="services">
+      <div class="container">
+        <div class="section-heading text-center">
+          <div class="section-tag mono-code">[ DEFENSE CAPABILITIES ]</div>
+          <h2 class="section-title">Full-Spectrum Cybersecurity Solutions</h2>
+          <p class="section-subtext">
+            From offensive adversary simulation to round-the-clock incident response, we empower enterprises with uncompromising resilience.
+          </p>
+        </div>
+
+        <div class="services-grid" id="services-grid-container">
+          <!-- Dynamically populated or static fallback rendered by JS -->
+          <div class="service-card glass-panel" data-service="vapt">
+            <div class="service-badge">Offensive Security</div>
+            <div class="service-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3 class="service-title">Penetration Testing & VAPT</h3>
+            <p class="service-desc">Simulate real-world nation-state cyberattacks against web apps, mobile APIs, cloud perimeters, and active directories.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> OWASP Top 10 & SANS Top 25 Audit</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Zero-Day Vulnerability Research</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> API & Cloud Perimeter Stress Testing</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Executive & Technical Remediation Reports</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge"><i class="fa-regular fa-clock"></i> 5-Day SLA</span>
+              <button class="btn btn-outline select-service-btn" data-service-id="vapt">Book Pentest</button>
+            </div>
+          </div>
+
+          <div class="service-card glass-panel featured" data-service="soc">
+            <div class="service-badge highlight">Continuous Defense</div>
+            <div class="service-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <h3 class="service-title">24/7 Managed SOC & MDR</h3>
+            <p class="service-desc">AI-accelerated 24/7/365 Security Operations Center with real-time threat hunting, SIEM integration, and proactive containment.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> Sub-5-minute Incident Triage</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Behavioral EDR & XDR Telemetry</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Automated Threat Quarantine</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Dedicated Tier-3 Security Analyst</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge"><i class="fa-regular fa-clock"></i> &lt; 15 Min Response</span>
+              <button class="btn btn-primary select-service-btn" data-service-id="soc">Deploy SOC</button>
+            </div>
+          </div>
+
+          <div class="service-card glass-panel" data-service="red-team">
+            <div class="service-badge">Advanced Simulation</div>
+            <div class="service-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+            <h3 class="service-title">Red Teaming & Adversary Emulation</h3>
+            <p class="service-desc">Comprehensive multi-vector attack scenarios including physical intrusion, deep spear-phishing, social engineering, and covert data exfiltration.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> MITRE ATT&CK Framework Alignment</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Custom Stealth C2 Payload Crafting</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Phishing & Employee Resilience Drills</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Blue Team Tactical Defense Debrief</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge"><i class="fa-regular fa-clock"></i> Custom Campaign</span>
+              <button class="btn btn-outline select-service-btn" data-service-id="red-team">Inquire</button>
+            </div>
+          </div>
+
+          <div class="service-card glass-panel" data-service="cloud-security">
+            <div class="service-badge">Infrastructure</div>
+            <div class="service-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <h3 class="service-title">Cloud & Zero-Trust Architecture</h3>
+            <p class="service-desc">Harden AWS, Azure, GCP, and Kubernetes environments with micro-segmentation, IAM least-privilege, and automated CSPM posture management.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> Kubernetes & Container Hardening</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> IAM Blast-Radius Reduction</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Continuous Compliance & Drift Alarms</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> CI/CD DevSecOps Pipeline Security</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge"><i class="fa-regular fa-clock"></i> Full Architecture Audit</span>
+              <button class="btn btn-outline select-service-btn" data-service-id="cloud-security">Harden Cloud</button>
+            </div>
+          </div>
+
+          <div class="service-card glass-panel" data-service="incident-response">
+            <div class="service-badge red-badge">Critical Response</div>
+            <div class="service-icon red-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="service-title">Emergency Incident Response</h3>
+            <p class="service-desc">Immediate containment, forensic investigation, and ransomware recovery to mitigate business interruption and data loss.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> 1-Hour Emergency On-Call Team</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Digital Forensics & Root Cause Analysis</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Ransomware Negotiation & Decryption</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Regulatory Reporting & Evidence Preservation</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge text-danger"><i class="fa-solid fa-bolt"></i> 24/7 Hotline</span>
+              <button class="btn btn-danger select-service-btn" data-service-id="incident-response">Emergency IR</button>
+            </div>
+          </div>
+
+          <div class="service-card glass-panel" data-service="compliance">
+            <div class="service-badge">Audit & Advisory</div>
+            <div class="service-icon"><i class="fa-solid fa-file-shield"></i></div>
+            <h3 class="service-title">Compliance & Governance (GRC)</h3>
+            <p class="service-desc">End-to-end audit readiness and certification assistance for global data privacy and cybersecurity standards.</p>
+            <ul class="service-checklist">
+              <li><i class="fa-solid fa-check text-cyan"></i> ISO 27001:2022 & SOC 2 Type II</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> PCI-DSS 4.0 & HIPAA Security Rule</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> GDPR & NIST CSF Frameworks</li>
+              <li><i class="fa-solid fa-check text-cyan"></i> Automated Evidence Gathering Support</li>
+            </ul>
+            <div class="service-footer">
+              <span class="sla-badge"><i class="fa-regular fa-clock"></i> 100% Pass Guarantee</span>
+              <button class="btn btn-outline select-service-btn" data-service-id="compliance">Start Audit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Threat Radar & Intel Center -->
+    <section class="radar-section section-padding" id="threat-radar">
+      <div class="container">
+        <div class="section-heading text-center">
+          <div class="section-tag mono-code">[ LIVE TELEMETRY ]</div>
+          <h2 class="section-title">Global Threat Radar & Interception Feed</h2>
+          <p class="section-subtext">Real-time telemetry gathered from our global honeypot network and cloud telemetry sensors.</p>
+        </div>
+
+        <div class="radar-dashboard-grid">
+          <!-- Radar Visualizer -->
+          <div class="radar-display glass-panel">
+            <div class="radar-screen">
+              <div class="radar-grid-lines"></div>
+              <div class="radar-crosshair"></div>
+              <div class="radar-sweep"></div>
+              <div class="threat-blip blip-1" data-threat="APT29 Beacon"></div>
+              <div class="threat-blip blip-2" data-threat="Botnet Flood"></div>
+              <div class="threat-blip blip-3" data-threat="SQL Injection"></div>
+              <div class="threat-blip blip-4" data-threat="S3 Misconfig Probe"></div>
+            </div>
+            <div class="radar-footer">
+              <span class="mono-code text-cyan"><i class="fa-solid fa-location-crosshairs"></i> SCANNER: ACTIVE (360° COVERAGE)</span>
+              <button class="btn-sm btn-outline" id="refresh-threats-btn"><i class="fa-solid fa-rotate"></i> Refresh Feed</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Threat Feed Table -->
+          <div class="threat-feed-container glass-panel">
+            <div class="feed-header">
+              <h4 class="feed-title"><i class="fa-solid fa-shield-virus text-cyan"></i> Real-time Interceptions</h4>
+              <span class="badge-status-online" id="radar-live-count">6 Active Streams</span>
+            </div>
+            
+            <div class="threat-table-wrapper">
+              <table class="threat-table" id="threat-feed-table">
+                <thead>
+                  <tr>
+                    <th>Attack Vector</th>
+                    <th>Source / Region</th>
+                    <th>Severity</th>
+                    <th>Mitigation</th>
+                  </tr>
+                </thead>
+                <tbody id="threat-feed-tbody">
+                  <!-- Populated via API -->
+                  <tr>
+                    <td colspan="4" class="text-center py-4">Connecting to Aegis Threat Feeds...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Cyber Risk Calculator -->
+    <section class="calculator-section section-padding" id="risk-calculator">
+      <div class="container">
+        <div class="calculator-wrapper glass-panel">
+          <div class="calculator-intro">
+            <div class="section-tag mono-code">[ ASSESSMENT ENGINE ]</div>
+            <h2 class="section-title">Instant Enterprise Cyber Risk Calculator</h2>
+            <p class="section-subtext">Evaluate your organizational security posture and generate a personalized defense roadmap.</p>
+          </div>
+
+          <form id="risk-calc-form" class="calculator-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="calc-company">Company / Organization Name *</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-building"></i>
+                  <input type="text" id="calc-company" name="companyName" placeholder="e.g., Nova Financial Group" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="calc-email">Corporate Email Address *</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-envelope"></i>
+                  <input type="email" id="calc-email" name="email" placeholder="ciso@novagroup.com" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="calc-industry">Industry Vertical *</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-industry"></i>
+                  <select id="calc-industry" name="industry" required>
+                    <option value="Finance">Financial Services & Banking</option>
+                    <option value="Healthcare">Healthcare & HealthTech</option>
+                    <option value="Crypto">Fintech & Web3 / Crypto</option>
+                    <option value="SaaS">SaaS & Enterprise Software</option>
+                    <option value="E-Commerce">E-Commerce & Retail</option>
+                    <option value="Other">Other / General Enterprise</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="calc-size">Employee Count / Organization Scale</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-users"></i>
+                  <select id="calc-size" name="companySize">
+                    <option value="1-50">1 - 50 Employees</option>
+                    <option value="50-500" selected>50 - 500 Employees</option>
+                    <option value="500+">500+ Enterprise Scale</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Checkbox toggles -->
+            <div class="form-switches-section">
+              <h4 class="switches-title">Current Security Baseline</h4>
+              <div class="switches-grid">
+                <label class="custom-switch-label">
+                  <input type="checkbox" name="hasSOC" id="toggle-soc">
+                  <span class="switch-box"></span>
+                  <span class="switch-text">Dedicated 24/7 Managed SOC in place</span>
+                </label>
+                <label class="custom-switch-label">
+                  <input type="checkbox" name="hasPenTestRecently" id="toggle-pentest">
+                  <span class="switch-box"></span>
+                  <span class="switch-text">Penetration Test completed in past 6 months</span>
+                </label>
+                <label class="custom-switch-label">
+                  <input type="checkbox" name="cloudMulti" id="toggle-cloud" checked>
+                  <span class="switch-box"></span>
+                  <span class="switch-text">Multi-Cloud Infrastructure (AWS / Azure / GCP)</span>
+                </label>
+                <label class="custom-switch-label">
+                  <input type="checkbox" name="mfaEnforced" id="toggle-mfa" checked>
+                  <span class="switch-box"></span>
+                  <span class="switch-text">Zero-Trust MFA Enforced for All Staff</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-submit-row">
+              <button type="submit" class="btn btn-primary btn-lg" id="calc-submit-btn">
+                <i class="fa-solid fa-microchip"></i> Compute Risk Assessment
+              </button>
+            </div>
+          </form>
+
+          <!-- Result Modal / Card Container -->
+          <div id="calculator-result" class="calculator-result-box hidden">
+            <div class="result-header">
+              <h3 class="result-title">Security Risk Assessment Report</h3>
+              <span class="result-ticket mono-code" id="result-ticket-id">AUD-X8921</span>
+            </div>
+
+            <div class="result-grid">
+              <div class="risk-score-display">
+                <div class="risk-meter-circle" id="risk-score-circle">
+                  <span class="risk-score-number" id="risk-score-value">72</span>
+                  <span class="risk-score-unit">/ 100</span>
+                </div>
+                <div class="risk-posture-tag" id="risk-posture-label">High Vulnerability</div>
+              </div>
+
+              <div class="risk-details-content">
+                <div class="risk-stat-bar">
+                  <div class="stat-pill">
+                    <span class="label">Target:</span>
+                    <span class="val" id="result-company-name">Nova Financial</span>
+                  </div>
+                  <div class="stat-pill">
+                    <span class="label">Estimated CVE Exposure:</span>
+                    <span class="val text-danger" id="result-cve-count">~84 Vulnerabilities</span>
+                  </div>
+                  <div class="stat-pill">
+                    <span class="label">Recommended Strategy:</span>
+                    <span class="val text-cyan" id="result-package">Enterprise Shield & 24/7 SOC</span>
+                  </div>
+                </div>
+
+                <div class="recommendations-box">
+                  <h4 class="rec-title"><i class="fa-solid fa-list-check text-cyan"></i> Actionable Mitigation Steps:</h4>
+                  <ul id="recommendations-list" class="rec-list">
+                    <!-- Populated dynamically -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <a href="#contact" class="btn btn-primary" id="consultation-from-calc-btn">
+                <i class="fa-solid fa-user-shield"></i> Book Remediation Consultation
+              </a>
+              <button class="btn btn-outline" id="recalculate-btn">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Modify Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Terminal Scanner Preview Demo -->
+    <section class="terminal-section section-padding" id="terminal-demo">
+      <div class="container">
+        <div class="section-heading text-center">
+          <div class="section-tag mono-code">[ OFFENSIVE TOOLKIT PREVIEW ]</div>
+          <h2 class="section-title">Automated VAPT Reconnaissance Engine</h2>
+          <p class="section-subtext">Interactive simulated terminal showing our proprietary vulnerability scanner discovering attack surfaces.</p>
+        </div>
+
+        <div class="terminal-wrapper glass-panel">
+          <div class="terminal-bar">
+            <div class="terminal-controls">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+            </div>
+            <div class="terminal-title mono-code">aegis-scanner@defense-node-01: ~/recon</div>
+            <div class="terminal-actions">
+              <button class="term-btn" id="run-terminal-scan-btn"><i class="fa-solid fa-play"></i> Run Simulation</button>
+              <button class="term-btn" id="clear-terminal-btn"><i class="fa-solid fa-trash-can"></i> Clear</button>
+            </div>
+          </div>
+          <div class="terminal-console mono-code" id="terminal-screen">
+            <div class="term-line text-cyan">Aegis Offensive Engine v4.8 [Ready]</div>
+            <div class="term-line text-muted">Type or click 'Run Simulation' to execute multi-vector cloud perimeter inspection.</div>
+            <div class="term-line"><span class="prompt text-green">root@aegis:~#</span> <span class="cursor-blink">_</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compliance & Trust Frameworks -->
+    <section class="compliance-section section-padding" id="compliance">
+      <div class="container">
+        <div class="section-heading text-center">
+          <div class="section-tag mono-code">[ REGULATORY ALIGNMENT ]</div>
+          <h2 class="section-title">Global Compliance & Industry Certifications</h2>
+          <p class="section-subtext">We ensure your infrastructure meets the strictest international compliance mandates.</p>
+        </div>
+
+        <div class="compliance-badges-grid">
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-certificate badge-icon"></i>
+            <h4 class="badge-name">ISO 27001</h4>
+            <p class="badge-sub">Information Security Mgmt</p>
+          </div>
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-shield-halved badge-icon text-cyan"></i>
+            <h4 class="badge-name">SOC 2 Type II</h4>
+            <p class="badge-sub">Trust Services Criteria</p>
+          </div>
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-credit-card badge-icon text-green"></i>
+            <h4 class="badge-name">PCI-DSS 4.0</h4>
+            <p class="badge-sub">Payment Card Security</p>
+          </div>
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-notes-medical badge-icon text-purple"></i>
+            <h4 class="badge-name">HIPAA HITECH</h4>
+            <p class="badge-sub">Healthcare Data Privacy</p>
+          </div>
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-scale-balanced badge-icon text-yellow"></i>
+            <h4 class="badge-name">NIST CSF 2.0</h4>
+            <p class="badge-sub">Cybersecurity Framework</p>
+          </div>
+          <div class="badge-item glass-panel">
+            <i class="fa-solid fa-user-lock badge-icon text-cyan"></i>
+            <h4 class="badge-name">GDPR / CCPA</h4>
+            <p class="badge-sub">Data Protection Standard</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact & Consultation Section -->
+    <section class="contact-section section-padding" id="contact">
+      <div class="container">
+        <div class="contact-grid">
+          <!-- Left Info Column -->
+          <div class="contact-info">
+            <div class="section-tag mono-code">[ ENGAGE DEFENSE TEAM ]</div>
+            <h2 class="section-title">Schedule a Consultation or Report an Incident</h2>
+            <p class="contact-desc">
+              Whether you need to harden infrastructure, audit applications, or respond to an ongoing ransomware breach, our certified ethical hackers and incident commanders are on standby.
+            </p>
+
+            <div class="contact-methods">
+              <div class="contact-method-card glass-panel emergency-highlight">
+                <div class="method-icon red-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="method-text">
+                  <span class="method-label text-danger">24/7 EMERGENCY IR DISPATCH</span>
+                  <span class="method-value mono-code">+1 (800) 555-AEGIS (2344)</span>
+                  <span class="method-sub">Guaranteed response in under 15 minutes</span>
+                </div>
+              </div>
+
+              <div class="contact-method-card glass-panel">
+                <div class="method-icon text-cyan"><i class="fa-solid fa-envelope-open-text"></i></div>
+                <div class="method-text">
+                  <span class="method-label">ENCRYPTED INBOX</span>
+                  <span class="method-value mono-code">ops@aegis-defense.sec</span>
+                  <span class="method-sub">PGP Key ID: 0x9B4E38F1A72C</span>
+                </div>
+              </div>
+
+              <div class="contact-method-card glass-panel">
+                <div class="method-icon text-green"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="method-text">
+                  <span class="method-label">GLOBAL SOC CENTERS</span>
+                  <span class="method-value">Singapore • London • New York</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Booking Form -->
+          <div class="contact-form-container glass-panel">
+            <form id="contact-booking-form" class="main-form">
+              <div class="form-tabs">
+                <button type="button" class="form-tab-btn active" data-urgency="Standard" id="tab-standard">
+                  <i class="fa-solid fa-shield"></i> Security Inquiry / Quote
+                </button>
+                <button type="button" class="form-tab-btn emergency-tab" data-urgency="Emergency" id="tab-emergency">
+                  <i class="fa-solid fa-bell"></i> 🚨 Active Breach Incident
+                </button>
+              </div>
+
+              <input type="hidden" name="urgency" id="form-urgency-input" value="Standard">
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="contact-name">Full Name *</label>
+                  <input type="text" id="contact-name" name="name" placeholder="John Doe, CISO" required>
+                </div>
+                <div class="form-group">
+                  <label for="contact-email">Corporate Email *</label>
+                  <input type="email" id="contact-email" name="email" placeholder="j.doe@company.com" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="contact-phone">Direct Phone / Signal</label>
+                  <input type="tel" id="contact-phone" name="phone" placeholder="+1 (555) 000-0000">
+                </div>
+                <div class="form-group">
+                  <label for="contact-company">Company Name</label>
+                  <input type="text" id="contact-company" name="company" placeholder="Acme Corp">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="contact-service">Primary Service Interest *</label>
+                <select id="contact-service" name="serviceType" required>
+                  <option value="Penetration Testing & VAPT">Penetration Testing & VAPT</option>
+                  <option value="24/7 Managed SOC & MDR">24/7 Managed SOC & MDR</option>
+                  <option value="Red Teaming & Simulation">Red Teaming & Adversary Simulation</option>
+                  <option value="Cloud Zero-Trust Architecture">Cloud & Zero-Trust Architecture</option>
+                  <option value="Emergency Incident Response">Emergency Incident Response</option>
+                  <option value="Compliance & GRC (ISO/SOC2/PCI)">Compliance & GRC (ISO/SOC2/PCI)</option>
+                  <option value="Other Advisory">Other Security Advisory</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="contact-message">Project Scope / Incident Details</label>
+                <textarea id="contact-message" name="message" rows="4" placeholder="Describe endpoints, cloud assets, desired timeline, or active incident indicators..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg" id="contact-submit-btn">
+                <i class="fa-solid fa-paper-plane"></i> Submit Security Request
+              </button>
+            </form>
+
+            <div id="contact-feedback" class="feedback-toast hidden"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-section">
+    <div class="container footer-container">
+      <div class="footer-col brand-col">
+        <div class="brand-logo">
+          <div class="logo-icon"><i class="fa-solid fa-shield-cat"></i></div>
+          <div class="logo-text">
+            <span class="brand-name">AEGIS<span class="cyan-dot">.</span>SEC</span>
+          </div>
+        </div>
+        <p class="footer-desc">
+          Enterprise cyber warfare defense, offensive vulnerability assessment, and continuous SOC operations.
+        </p>
+        <div class="pgp-badge mono-code">
+          <i class="fa-solid fa-key text-cyan"></i> PGP FINGERPRINT: 4A72 FC91 88B3 DE20
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5 class="footer-heading">Offensive Services</h5>
+        <ul class="footer-links">
+          <li><a href="#services">Web & Mobile VAPT</a></li>
+          <li><a href="#services">Red Team Operations</a></li>
+          <li><a href="#services">Cloud Infrastructure Audit</a></li>
+          <li><a href="#services">Social Engineering Drills</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5 class="footer-heading">Defensive Services</h5>
+        <ul class="footer-links">
+          <li><a href="#services">24/7 Managed SOC</a></li>
+          <li><a href="#services">Threat Hunting & EDR</a></li>
+          <li><a href="#services">Incident Response Hotline</a></li>
+          <li><a href="#compliance">SOC 2 & ISO 27001 GRC</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5 class="footer-heading">System Status</h5>
+        <div class="soc-status-box mono-code">
+          <div class="status-row">
+            <span>SOC STATUS:</span>
+            <span class="text-green">ONLINE (100%)</span>
+          </div>
+          <div class="status-row">
+            <span>UPTIME:</span>
+            <span class="text-cyan">99.998%</span>
+          </div>
+          <div class="status-row">
+            <span>ENCRYPTION:</span>
+            <span class="text-purple">QUANTUM-READY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p class="copyright mono-code">© 2026 AEGIS CYBER DEFENSE INC. ALL RIGHTS RESERVED.</p>
+        <p class="compliance-note mono-code">CONFIDENTIAL & PROPRIETARY DEFENSE SYSTEMS</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notification Modal / Toast Popup -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Custom Javascript -->
+  <script src="js/app.js"></script>
+</body>
+</html>
