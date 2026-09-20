@@ -1,0 +1,135 @@
+services:
+  # ==============================================================================
+  # CONTROL & SCORING PLATFORM TIER
+  # ==============================================================================
+  ctfd:
+    image: ctfd/ctfd:3.7.0
+    container_name: aegis-ctfd
+    restart: unless-stopped
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - DATABASE_URL=mysql+pymysql://ctfd:ctfd_secure_pass_2026@db/ctfd
+      - REDIS_URL=redis://cache:6379
+      - SECRET_KEY=aegis_master_ctfd_secret_token_99812
+    volumes:
+      - ./data/ctfd/uploads:/var/uploads
+      - ./data/ctfd/logs:/var/log/CTFd
+    networks:
+      - management_net
+      - dmz_net
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: mysql:8.0
+    container_name: aegis-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_secure_pass_9921
+      - MYSQL_DATABASE=ctfd
+      - MYSQL_USER=ctfd
+      - MYSQL_PASSWORD=ctfd_secure_pass_2026
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - management_net
+
+  cache:
+    image: redis:7-alpine
+    container_name: aegis-redis
+    restart: unless-stopped
+    networks:
+      - management_net
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: aegis-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"       # CTFd Portal
+      - "8080:8080"   # Stage 2 Staging Web Portal
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./challenges/stage1_recon/static:/usr/share/nginx/html/stage1:ro
+    networks:
+      - management_net
+      - dmz_net
+    depends_on:
+      - ctfd
+      - stage2-web
+
+  # ==============================================================================
+  # CHALLENGE STAGE CONTAINERS
+  # ==============================================================================
+
+  # Stage 2: Web Security & Broken Access Control (Flask + JWT)
+  stage2-web:
+    build:
+      context: ./challenges/stage2_web
+      dockerfile: Dockerfile
+    container_name: aegis-web-stage2
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - JWT_WEAK_SECRET=secret123
+    networks:
+      - dmz_net
+    mem_limit: 512m
+    cpus: 0.75
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+  # Stage 5: Reverse Engineering & Staging Jump Host
+  stage5-staging-box:
+    build:
+      context: ./challenges/stage5_rev
+      dockerfile: Dockerfile
+    container_name: aegis-staging-box
+    restart: unless-stopped
+    ports:
+      - "2222:22"     # Staging SSH forward for participant access
+    networks:
+      - dmz_net
+      - internal_bastion_net
+    mem_limit: 1024m
+    cpus: 1.0
+
+  # Stage 6: The Core Bastion (Restricted Shell & Sudo Wildcard Tar PrivEsc)
+  stage6-core-bastion:
+    build:
+      context: ./challenges/stage6_privesc
+      dockerfile: Dockerfile
+    container_name: aegis-core-bastion
+    restart: unless-stopped
+    # Strictly internal! No exposed host ports. Accessed only via Stage 5 lateral movement.
+    networks:
+      internal_bastion_net:
+        ipv4_address: 172.20.0.50
+    mem_limit: 512m
+    cpus: 0.75
+
+# ==============================================================================
+# NETWORK SEGMENTATION DESIGN
+# ==============================================================================
+networks:
+  management_net:
+    driver: bridge
+    internal: true
+
+  dmz_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/24
+
+  internal_bastion_net:
+    driver: bridge
+    internal: true   # Completely disables external internet access / NAT gateway
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
