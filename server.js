@@ -11,264 +11,323 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Mock In-memory Storage for inquiries/reports
-const consultations = [];
+// In-memory data store for audits & incidents
 const auditRequests = [];
+const portalSessions = [];
+const crisisDispatches = [];
 
-// Cyber Security Services Catalog
-const services = [
+// Cyber Shield Security Catalog
+const coreServices = [
   {
-    id: 'vapt',
-    title: 'Penetration Testing & VAPT',
-    icon: 'fa-shield-halved',
-    badge: 'Offensive Security',
-    description: 'Simulate real-world nation-state cyberattacks against web apps, mobile APIs, network perimeters, and active directories.',
-    features: [
-      'OWASP Top 10 & SANS Top 25 Audit',
-      'Zero-Day Vulnerability Research',
-      'API & Cloud Perimeter Stress Testing',
-      'Executive & Technical Remediation Reports'
-    ],
-    sla: '5-Day Rapid Turnaround'
+    id: 'pentest',
+    name: 'Penetration Testing',
+    icon: 'fa-arrow-right-arrow-left',
+    category: 'Offensive Security',
+    description: 'Black-box, grey-box, and white-box adversary simulation against web, API, mobile, and Active Directory environments.',
+    metrics: '99.4% Critical Vulnerability Discovery'
   },
   {
-    id: 'soc',
-    title: '24/7 Managed SOC & MDR',
-    icon: 'fa-tower-broadcast',
-    badge: 'Continuous Defense',
-    description: 'AI-accelerated 24/7/365 Security Operations Center with real-time threat hunting, SIEM integration, and proactive containment.',
-    features: [
-      'Sub-5-minute Incident Triage',
-      'Behavioral EDR & XDR Telemetry',
-      'Automated Threat Quarantine',
-      'Dedicated Tier-3 Security Analyst'
-    ],
-    sla: '< 15 Min SLA Response'
-  },
-  {
-    id: 'red-team',
-    title: 'Red Teaming & Adversary Emulation',
-    icon: 'fa-skull-crossbones',
-    badge: 'Advanced Simulation',
-    description: 'Comprehensive multi-vector attack scenarios including physical intrusion, deep spear-phishing, social engineering, and covert data exfiltration.',
-    features: [
-      'MITRE ATT&CK Framework Alignment',
-      'Custom Stealth C2 Payload Crafting',
-      'Phishing & Employee Resilience Drills',
-      'Blue Team Tactical Defense Debrief'
-    ],
-    sla: 'Custom Campaign'
-  },
-  {
-    id: 'cloud-security',
-    title: 'Cloud & Zero-Trust Architecture',
-    icon: 'fa-cloud-arrow-up',
-    badge: 'Infrastructure',
-    description: 'Harden AWS, Azure, GCP, and Kubernetes environments with micro-segmentation, IAM least-privilege, and automated CSPM posture management.',
-    features: [
-      'Kubernetes & Container Hardening',
-      'IAM Blast-Radius Reduction',
-      'Continuous Compliance & Drift Alarms',
-      'CI/CD DevSecOps Pipeline Security'
-    ],
-    sla: 'Complete Architecture Audit'
+    id: 'network-sec',
+    name: 'Network Security',
+    icon: 'fa-network-wired',
+    category: 'Infrastructure',
+    description: 'Next-generation firewall management, deep packet inspection, IDS/IPS tuning, and internal subnet micro-segmentation.',
+    metrics: 'Sub-millisecond Threat Scrubbing'
   },
   {
     id: 'incident-response',
-    title: 'Emergency Incident Response',
-    icon: 'fa-triangle-exclamation',
-    badge: 'Critical Rapid Response',
-    description: 'Immediate containment, forensic investigation, and ransomware recovery to mitigate business interruption and data loss.',
-    features: [
-      '1-Hour Emergency On-Call Team',
-      'Digital Forensics & Root Cause Analysis',
-      'Ransomware Negotiation & Decryption Support',
-      'Regulatory Reporting & Evidence Preservation'
-    ],
-    sla: '24/7 Emergency Line'
+    name: 'Incident Response',
+    icon: 'fa-shield-halved',
+    category: 'Crisis Defense',
+    description: 'Rapid containment, malware analysis, digital forensics, and emergency ransomware negotiation & remediation.',
+    metrics: '< 15 Min SLA Dispatch'
   },
   {
-    id: 'compliance',
-    title: 'Compliance & Governance (GRC)',
-    icon: 'fa-file-shield',
-    badge: 'Audit & Advisory',
-    description: 'End-to-end audit readiness and certification assistance for global data privacy and cybersecurity standards.',
-    features: [
-      'ISO 27001:2022 & SOC 2 Type II',
-      'PCI-DSS 4.0 & HIPAA Security Rule',
-      'GDPR & NIST CSF Frameworks',
-      'Automated Evidence Gathering Support'
-    ],
-    sla: 'Guaranteed Audit Readiness'
+    id: 'cloud-protection',
+    name: 'Cloud Protection',
+    icon: 'fa-cloud',
+    category: 'Cloud & Zero Trust',
+    description: 'Automated CSPM, Kubernetes container hardening, AWS/Azure/GCP IAM blast radius elimination.',
+    metrics: '100% Zero-Trust Compliance'
+  },
+  {
+    id: 'code-audits',
+    name: 'Code Audits',
+    icon: 'fa-code',
+    category: 'DevSecOps',
+    description: 'Static (SAST) and Dynamic (DAST) source code auditing, dependency chain scanning, and secret leak detection.',
+    metrics: 'OWASP & CWE Alignment'
   }
 ];
 
-// Live Simulated Threat Intelligence Stream
-const sampleThreats = [
-  { type: 'Distributed Denial of Service (DDoS)', source: 'Botnet Cluster (AS45102)', country: 'Global Relay', severity: 'Critical', target: 'Financial Gateway', status: 'Blocked by Scrubbing Center' },
-  { type: 'Zero-Day Remote Code Execution (RCE)', source: 'Unknown APT Actor', country: 'Eastern Europe', severity: 'High', target: 'Web Application API', status: 'Virtual Patch Applied' },
-  { type: 'Credential Stuffing Assault', source: 'Tor Exit Node Pool', country: 'Multi-Region', severity: 'Medium', target: 'Customer Identity Portal', status: 'Adaptive MFA Triggered' },
-  { type: 'Ransomware C2 Beaconing', source: 'Cobalt Strike Derivative', country: 'South America', severity: 'Critical', target: 'Legacy Database Server', status: 'Endpoint Quarantined' },
-  { type: 'Suspicious Cloud IAM Escalation', source: 'Anomalous Token Usage', country: 'North America', severity: 'High', target: 'AWS S3 Bucket Policy', status: 'Session Terminated' },
-  { type: 'SQL Injection / Data Exfiltration Attempt', source: 'Automated Exploit Kit', country: 'Asia Pacific', severity: 'High', target: 'E-Commerce Checkout', status: 'WAF Rule Blocked' }
+const allServices = [
+  { id: 'net-prot', title: 'NETWORK PROTECTION', icon: 'fa-crosshairs', desc: 'Perimeter firewalls, DDoS scrubbing & encrypted tunnels.' },
+  { id: 'infra-shield', title: 'INFRASTRUCTURE SHIELD', icon: 'fa-shield-virus', desc: 'Host hardening, kernel integrity checks & zero-trust gateways.' },
+  { id: 'cyber-def', title: 'CYBER DEFENSE', icon: 'fa-shield', desc: '24/7 SIEM monitoring, behavioral telemetry & automated quarantine.' },
+  { id: 'vuln-assess', title: 'VULNERABILITY ASSESSMENT', icon: 'fa-magnifying-glass', desc: 'Continuous automated and manual CVE surface inspection.' },
+  { id: 'sec-consulting', title: 'SECURITY CONSULTING', icon: 'fa-key', desc: 'CISO advisory, ISO 27001, SOC 2, and NIST framework compliance.' },
+  { id: 'crisis-resp', title: 'CRISIS RESPONSE', icon: 'fa-triangle-exclamation', desc: 'Immediate incident commander dispatch for active breach triage.' }
+];
+
+// Live Simulated Exploit Log Lines
+const exploitSnippets = [
+  '10.100.400.111 Exploit code - Memory buffer overrun detected on port 8080 (BLOCKED)',
+  '192.168.1.104 Exploit code - SQLi blind timing probe injected into /v1/auth (QUARANTINED)',
+  '172.16.42.89 Exploit code - Cobalt strike beacon probe blocked by IDS filter',
+  '10.0.12.55 Exploit code - Zero-day deserialization attempt on Spring cloud cluster (DROPPED)',
+  '185.220.101.5 Exploit code - TOR exit node brute-force on SSH port 22 (BANNED)'
 ];
 
 // --- API Endpoints ---
 
-// 1. Get Service Catalog
-app.get('/api/services', (req, res) => {
-  res.json({ success: true, count: services.length, services });
-});
+// 1. Live Threat Monitoring Telemetry
+app.get('/api/threat-monitoring', (req, res) => {
+  const baseIPs = [
+    '235.983.234',
+    '135.187.559',
+    '135.183.300',
+    '153.183.556',
+    '153.182.355',
+    '194.165.118',
+    '178.62.204'
+  ];
 
-// 2. Threat Feed (returns dynamic simulated threat telemetry)
-app.get('/api/threat-feed', (req, res) => {
-  const randomizedThreats = sampleThreats.map((threat, idx) => ({
-    ...threat,
-    id: `THR-${Date.now()}-${idx}`,
-    timestamp: new Date(Date.now() - (idx * 45000 + Math.floor(Math.random() * 20000))).toISOString(),
-    blockedRequests: Math.floor(Math.random() * 45000) + 12000
+  // Pick random active IPs
+  const activeIPs = baseIPs.slice(0, 5).map(ip => ({
+    ip: `IP: ${ip}`,
+    status: Math.random() > 0.3 ? 'INTERCEPTED' : 'ANALYZING',
+    threat: ['DDoS Cluster', 'RCE Probe', 'Credential Stuffing', 'C2 Beacon', 'Port Scan'][Math.floor(Math.random() * 5)],
+    latency: `${Math.floor(Math.random() * 30) + 5}ms`
   }));
 
   res.json({
     success: true,
-    threatLevel: 'DEFCON 3 - ELEVATED VIGILANCE',
-    activeAttacksBlocked24h: 1849204 + Math.floor(Math.random() * 5000),
-    globalRadarStatus: 'ONLINE - 100% SENSORS ACTIVE',
-    feed: randomizedThreats
+    status: 'ONLINE',
+    liveAttacksCount: 1234 + Math.floor(Math.random() * 50),
+    activeIPs,
+    exploitStream: exploitSnippets[Math.floor(Math.random() * exploitSnippets.length)],
+    timestamp: new Date().toISOString()
   });
 });
 
-// 3. Security Risk Calculator API
+// 2. Services List
+app.get('/api/services', (req, res) => {
+  res.json({
+    success: true,
+    coreServices,
+    allServices
+  });
+});
+
+// 3. Security Audit Computation & Submission
 app.post('/api/audit-request', (req, res) => {
-  const { companyName, email, industry, companySize, cloudProviders, hasSOC, hasPenTestRecently } = req.body;
+  const { companyName, email, industry, companySize, scope, cloudProviders } = req.body;
 
   if (!companyName || !email) {
     return res.status(400).json({
       success: false,
-      message: 'Company name and contact email are required.'
+      message: 'Company name and email address are required.'
     });
   }
 
-  // Calculate dynamic Cyber Risk Index (0 - 100)
-  let riskScore = 45; // baseline
-
-  if (industry === 'Finance' || industry === 'Healthcare' || industry === 'Crypto') riskScore += 20;
-  if (companySize === '500+') riskScore += 15;
-  else if (companySize === '50-500') riskScore += 10;
-
+  // Calculate Cyber Risk Score
+  let riskScore = 48;
+  if (industry === 'Finance' || industry === 'Crypto' || industry === 'Healthcare') riskScore += 24;
+  if (companySize === '500+') riskScore += 18;
   if (Array.isArray(cloudProviders) && cloudProviders.length > 2) riskScore += 10;
-  if (!hasSOC) riskScore += 20;
-  if (!hasPenTestRecently) riskScore += 15;
+  riskScore = Math.min(98, Math.max(12, riskScore));
 
-  // Cap risk score between 15 and 98
-  riskScore = Math.min(98, Math.max(15, riskScore));
-
-  let threatPosture = 'Low Risk';
-  let color = '#00FF9D';
-  if (riskScore >= 75) {
-    threatPosture = 'Critical Exposure';
-    color = '#FF0055';
-  } else if (riskScore >= 50) {
-    threatPosture = 'High Vulnerability';
-    color = '#FFB800';
-  } else if (riskScore >= 30) {
-    threatPosture = 'Moderate Exposure';
-    color = '#00F0FF';
-  }
-
-  const recommendations = [];
-  if (!hasSOC) recommendations.push('Deploy 24/7 Managed SOC & Real-Time Threat Hunting to eliminate blindspots.');
-  if (!hasPenTestRecently) recommendations.push('Conduct immediate Full-Scope Penetration Testing (VAPT) on public endpoints.');
-  if (Array.isArray(cloudProviders) && cloudProviders.length > 1) recommendations.push('Implement Multi-Cloud Zero-Trust IAM & Container Hardening.');
-  if (industry === 'Finance' || industry === 'Healthcare') recommendations.push('Perform compliance readiness assessment for PCI-DSS 4.0 / HIPAA / SOC 2 Type II.');
+  let threatPosture = riskScore > 75 ? 'Critical Risk' : (riskScore > 45 ? 'Elevated Exposure' : 'Low Risk');
+  let postureColor = riskScore > 75 ? '#FF0055' : (riskScore > 45 ? '#00E5FF' : '#00FF88');
 
   const report = {
-    id: `AUD-${Date.now().toString(36).toUpperCase()}`,
+    id: `CSS-AUD-${Date.now().toString(36).toUpperCase()}`,
     companyName,
     email,
     riskScore,
     threatPosture,
-    postureColor: color,
-    recommendations,
-    estimatedVulnerabilities: Math.round(riskScore * 1.4),
-    suggestedPackage: riskScore > 70 ? 'Enterprise Shield & 24/7 SOC' : (riskScore > 40 ? 'Advanced VAPT & Cloud Hardening' : 'Core Security Healthcheck'),
-    generatedAt: new Date().toISOString()
+    postureColor,
+    scope: scope || 'Full Infrastructure & Cloud VAPT',
+    estimatedVulnerabilities: Math.round(riskScore * 1.35),
+    recommendedSolutions: [
+      'Proactive Black-Box Penetration Testing & API Fuzzing',
+      '24/7 Automated Network & Endpoint Shield Monitoring',
+      'Cloud Zero-Trust Architecture & IAM Hardening',
+      'Continuous Threat Intel & Vulnerability Scanning'
+    ],
+    timestamp: new Date().toISOString()
   };
 
   auditRequests.push(report);
 
   res.json({
     success: true,
-    message: 'Cyber Risk Assessment generated successfully.',
+    message: 'Security Audit Request processed successfully. Our Cyber Defense unit is compiling your report.',
     report
   });
 });
 
-// 4. Contact & Consultation Booking Endpoint
-app.post('/api/contact', (req, res) => {
-  const { name, email, phone, company, serviceType, urgency, message } = req.body;
+// 4. Portal Login Simulator
+app.post('/api/auth/portal-login', (req, res) => {
+  const { username, password } = req.body;
 
-  if (!name || !email || !serviceType) {
-    return res.status(400).json({
-      success: false,
-      message: 'Name, email, and service interest are required.'
-    });
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Operator ID and Security Key required.' });
   }
 
-  const consultationEntry = {
-    id: `REQ-${Date.now().toString(36).toUpperCase()}`,
-    name,
-    email,
-    phone: phone || 'N/A',
-    company: company || 'N/A',
-    serviceType,
-    urgency: urgency || 'Standard',
-    message: message || 'N/A',
-    submittedAt: new Date().toISOString(),
-    status: urgency === 'Emergency' ? 'DISPATCHED_TO_PAGERDUTY' : 'ASSIGNED_TO_ARCHITECT'
-  };
-
-  consultations.push(consultationEntry);
+  const sessionToken = `CSS-AUTH-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+  portalSessions.push({ username, sessionToken, loggedInAt: new Date().toISOString() });
 
   res.json({
     success: true,
-    message: urgency === 'Emergency'
-      ? 'EMERGENCY ALERT RECEIVED. Our Incident Commander is contacting you in under 15 minutes.'
-      : 'Consultation request received! A Senior Security Architect will contact you within 2 business hours.',
-    ticketId: consultationEntry.id,
-    responseTime: urgency === 'Emergency' ? '< 15 Minutes' : '< 2 Hours'
+    message: 'Access Granted: Encrypted Cyber Shield Command Terminal Activated.',
+    sessionToken,
+    user: {
+      username,
+      role: 'CERTIFIED CYBER DEFENDER',
+      clearance: 'LEVEL-5 TOP SECRET',
+      activeShieldNodes: 48,
+      defenseStatus: 'OPTIMAL'
+    }
   });
 });
 
-// 5. System Health & Defense Readiness
-app.get('/api/system-status', (req, res) => {
+// 5. Emergency Crisis Response Dispatch
+app.post('/api/crisis-response', (req, res) => {
+  const { company, contactName, phone, email, breachType, notes } = req.body;
+
+  if (!contactName || !phone) {
+    return res.status(400).json({ success: false, message: 'Contact Name and Emergency Phone are required.' });
+  }
+
+  const dispatch = {
+    dispatchId: `CRISIS-${Date.now().toString(36).toUpperCase()}`,
+    company: company || 'Emergency Client',
+    contactName,
+    phone,
+    email: email || 'N/A',
+    breachType: breachType || 'Active Ransomware / APT Intrusion',
+    notes: notes || 'Immediate response requested',
+    dispatchedAt: new Date().toISOString(),
+    status: 'COMMANDER_DISPATCHED'
+  };
+
+  crisisDispatches.push(dispatch);
+
   res.json({
-    status: 'OPTIMAL',
-    uptime: '99.998%',
-    socEngine: 'Active AI Co-Pilot v4.8',
-    threatDefinitions: 'Updated 2 minutes ago',
-    activeIncidentsUnderControl: 142
+    success: true,
+    message: '🚨 EMERGENCY CRISIS TEAM DISPATCHED. Lead Incident Commander is calling your phone in < 10 minutes.',
+    dispatchId: dispatch.dispatchId,
+    eta: '< 10 Minutes'
   });
 });
 
-// Catch-all route to serve the Single Page Application
+// Cyber News & Intelligence Feed
+const cyberNews = [
+  {
+    id: 'NEWS-01',
+    title: 'Zero-Day RCE in Enterprise Cloud Edge Routers Actively Exploited',
+    category: 'Zero-Days',
+    severity: 'CRITICAL',
+    time: '12 mins ago',
+    source: 'Aegis Threat Lab',
+    summary: 'Nation-state APT actors are actively chaining an unauthenticated buffer overflow with memory tampering to bypass edge firewalls and achieve root execution.',
+    cve: 'CVE-2026-8912',
+    mitigation: 'Deploy virtual patching rule #99401 and restrict external administrative web interfaces.'
+  },
+  {
+    id: 'NEWS-02',
+    title: 'New Ransomware Variant "ShadowLock" Targeting Kubernetes API Endpoints',
+    category: 'Ransomware',
+    severity: 'CRITICAL',
+    time: '45 mins ago',
+    source: 'Global SOC Wire',
+    summary: 'Automated extortion bots are searching for open port 6443 clusters and injecting cryptojacking & volume encryption payloads into cluster pods.',
+    cve: 'CVE-2026-3401',
+    mitigation: 'Enforce RBAC mutual TLS and disable anonymous authentication on kube-apiserver.'
+  },
+  {
+    id: 'NEWS-03',
+    title: 'AI-Synthesized Voice Phishing Campaign Infiltrates Major Fintech Portals',
+    category: 'Breaches',
+    severity: 'HIGH',
+    time: '2 hours ago',
+    source: 'Cyber Defense Review',
+    summary: 'Attackers used real-time conversational deepfakes to impersonate C-level executives and approve fraudulent SWIFT fund re-routes.',
+    cve: 'SOCIAL-ENG-2026',
+    mitigation: 'Implement out-of-band cryptographic multi-party authorization for high-value transactions.'
+  },
+  {
+    id: 'NEWS-04',
+    title: 'Massive Multi-Vector DDoS Wave Peaks at 3.8 Tbps Against DNS Root Nodes',
+    category: 'DDoS',
+    severity: 'HIGH',
+    time: '4 hours ago',
+    source: 'Cloud Armor Feed',
+    summary: 'A botnet comprised of over 180,000 hijacked smart IoT cameras launched an amplified DNS/NTP reflection assault across North America.',
+    cve: 'BOTNET-RECON-99',
+    mitigation: 'Utilize BGP Anycast routing and automated Layer-7 rate-limiting scrubbing pipelines.'
+  },
+  {
+    id: 'NEWS-05',
+    title: 'CISA Issues Emergency Directive for Active Directory Kerberos Hardening',
+    category: 'Advisories',
+    severity: 'MEDIUM',
+    time: '6 hours ago',
+    source: 'US-CERT / CISA',
+    summary: 'Security bulletin warns of golden ticket forging vulnerabilities when domain controllers use legacy RC4-HMAC encryption keys.',
+    cve: 'CVE-2026-1180',
+    mitigation: 'Upgrade AD forests to AES-256-CTS-HMAC-SHA1-96 and enable PAC validation signatures.'
+  }
+];
+
+// 6. Cyber News Feed API
+app.get('/api/cyber-news', (req, res) => {
+  const { category } = req.query;
+  let filtered = cyberNews;
+  if (category && category !== 'All') {
+    filtered = cyberNews.filter(n => n.category.toLowerCase() === category.toLowerCase());
+  }
+  res.json({
+    success: true,
+    count: filtered.length,
+    news: filtered
+  });
+});
+
+// 7. General Contact
+app.post('/api/contact', (req, res) => {
+  const { name, email, service, message } = req.body;
+  res.json({
+    success: true,
+    message: 'Transmission received. A Cyber Shield Security Specialist will reach out within 2 hours.',
+    ticketId: `TICK-${Date.now().toString(36).toUpperCase()}`
+  });
+});
+
+// Dedicated Login Page Route
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Catch-all route to serve the SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start Server with Port Fallback
+// Start Server with Graceful Port Fallback
 function startServer(portToTry) {
   const server = app.listen(portToTry, () => {
     console.log(`=====================================================`);
-    console.log(`🛡️  AEGIS CYBER DEFENSE SERVICES PLATFORM IS RUNNING`);
+    console.log(`🛡️  CYBER SHIELD SECURITY COMMAND HUB IS LIVE`);
     console.log(`🌐  Local URL: http://localhost:${portToTry}`);
-    console.log(`🔒  Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔒  DEFENSE STATUS: ACTIVE // 100% SENSORS ARMED`);
     console.log(`=====================================================`);
   });
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.warn(`⚠️  Port ${portToTry} is already in use. Trying port ${portToTry + 1}...`);
+      console.warn(`⚠️  Port ${portToTry} is in use. Trying port ${portToTry + 1}...`);
       startServer(portToTry + 1);
     } else {
       console.error('Server error:', err);
@@ -277,4 +336,3 @@ function startServer(portToTry) {
 }
 
 startServer(Number(PORT));
-

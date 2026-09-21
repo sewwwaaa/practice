@@ -1,516 +1,448 @@
 /* ==========================================================================
-   AEGIS CYBER DEFENSE - CLIENT INTERACTION ENGINE
+   CYBERNEXUS — SECURITY OPERATIONS CENTER — DASHBOARD ENGINE
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initCyberCanvas();
-  initThreatFeed();
-  initRiskCalculator();
-  initTerminalScanner();
-  initContactForm();
-  initServiceButtons();
-  initMobileMenu();
-  initTelemetryLogStream();
+  initMatrixBg();
+  initSidebar();
+  initTerminal();
+  initStatCounters();
+  initVulnBars();
+  initBottomBar();
+  initNewsSection();
+  initMobileToggle();
+  initScanButton();
 });
 
-/* ==========================================================================
-   1. CYBER MATRIX / NETWORK CANVAS BACKGROUND
-   ========================================================================== */
-function initCyberCanvas() {
-  const canvas = document.getElementById('cyber-canvas');
+/* ══════════════════════════════════════════════════════════════════════
+   1. MATRIX RAIN BACKGROUND CANVAS
+══════════════════════════════════════════════════════════════════════ */
+function initMatrixBg() {
+  const canvas = document.getElementById('matrix-bg-canvas');
   if (!canvas) return;
-
   const ctx = canvas.getContext('2d');
-  let width = (canvas.width = window.innerWidth);
-  let height = (canvas.height = window.innerHeight);
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const CHARS = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘ';
+  let cols = Math.floor(window.innerWidth / 16);
+  const drops = Array.from({ length: cols }, () => Math.random() * -60);
 
   window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+    cols = Math.floor(window.innerWidth / 16);
   });
-
-  const nodes = [];
-  const nodeCount = Math.min(width > 768 ? 60 : 30, 80);
-
-  for (let i = 0; i < nodeCount; i++) {
-    nodes.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      radius: Math.random() * 1.5 + 1
-    });
-  }
 
   function draw() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'rgba(3, 10, 18, 0.055)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '12px JetBrains Mono, monospace';
 
-    // Draw connection lines
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[i].x - nodes[j].x;
-        const dy = nodes[i].y - nodes[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 140) {
-          ctx.beginPath();
-          ctx.moveTo(nodes[i].x, nodes[i].y);
-          ctx.lineTo(nodes[j].x, nodes[j].y);
-          ctx.strokeStyle = `rgba(0, 240, 255, ${0.15 * (1 - dist / 140)})`;
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Draw nodes
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i];
-      node.x += node.vx;
-      node.y += node.vy;
-
-      if (node.x < 0 || node.x > width) node.vx *= -1;
-      if (node.y < 0 || node.y > height) node.vy *= -1;
-
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0, 240, 255, 0.6)';
-      ctx.fill();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  draw();
-}
-
-/* ==========================================================================
-   2. LIVE THREAT FEED & TICKER
-   ========================================================================== */
-async function initThreatFeed() {
-  const tableBody = document.getElementById('threat-feed-tbody');
-  const liveTickerText = document.getElementById('live-ticker-text');
-  const refreshBtn = document.getElementById('refresh-threats-btn');
-
-  async function fetchThreats() {
-    try {
-      const res = await fetch('/api/threat-feed');
-      if (!res.ok) throw new Error('Network response failed');
-      const data = await res.json();
-
-      if (data.feed && tableBody) {
-        tableBody.innerHTML = '';
-        data.feed.forEach((item) => {
-          const tr = document.createElement('tr');
-          const sevClass = item.severity.toLowerCase();
-
-          tr.innerHTML = `
-            <td>
-              <strong class="text-white">${escapeHtml(item.type)}</strong>
-              <div class="text-dim text-xs mono-code">Target: ${escapeHtml(item.target)}</div>
-            </td>
-            <td>
-              <span class="mono-code">${escapeHtml(item.source)}</span>
-              <div class="text-muted text-xs">${escapeHtml(item.country)}</div>
-            </td>
-            <td>
-              <span class="badge-severity ${sevClass}">${item.severity}</span>
-            </td>
-            <td>
-              <span class="text-green text-xs mono-code"><i class="fa-solid fa-shield-check"></i> ${escapeHtml(item.status)}</span>
-            </td>
-          `;
-          tableBody.appendChild(tr);
-        });
-
-        // Update ticker text with random latest attack
-        if (liveTickerText && data.feed.length > 0) {
-          const sample = data.feed[Math.floor(Math.random() * data.feed.length)];
-          liveTickerText.innerHTML = `
-            <strong>[INTERCEPTED]</strong> ${sample.type} targeting <em>${sample.target}</em> from ${sample.source} (${sample.country}) - ${sample.status}
-          `;
-        }
-      }
-    } catch (err) {
-      console.warn('Threat feed offline / fallback active:', err);
+    for (let i = 0; i < drops.length; i++) {
+      const ch = CHARS[Math.floor(Math.random() * CHARS.length)];
+      const brightness = Math.random();
+      ctx.fillStyle = brightness > 0.92
+        ? `rgba(0,229,255,0.9)`
+        : `rgba(0,255,136,${0.3 + brightness * 0.5})`;
+      ctx.fillText(ch, i * 16, drops[i] * 16);
+      if (drops[i] * 16 > canvas.height && Math.random() > 0.978) drops[i] = 0;
+      drops[i] += 0.35;
     }
   }
 
-  fetchThreats();
-  setInterval(fetchThreats, 15000); // Polling every 15 seconds
-
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching...';
-      fetchThreats().finally(() => {
-        setTimeout(() => {
-          refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh Feed';
-        }, 600);
-      });
-    });
-  }
+  setInterval(draw, 60);
 }
 
-/* ==========================================================================
-   3. CYBER RISK ASSESSMENT CALCULATOR
-   ========================================================================== */
-function initRiskCalculator() {
-  const form = document.getElementById('risk-calc-form');
-  const resultBox = document.getElementById('calculator-result');
-  const recalcBtn = document.getElementById('recalculate-btn');
-
-  if (!form) return;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = document.getElementById('calc-submit-btn');
-    const originalBtnHtml = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Telemetry...';
-    submitBtn.disabled = true;
-
-    const companyName = document.getElementById('calc-company').value.trim();
-    const email = document.getElementById('calc-email').value.trim();
-    const industry = document.getElementById('calc-industry').value;
-    const companySize = document.getElementById('calc-size').value;
-
-    const hasSOC = document.getElementById('toggle-soc').checked;
-    const hasPenTestRecently = document.getElementById('toggle-pentest').checked;
-    const cloudMulti = document.getElementById('toggle-cloud').checked;
-
-    try {
-      const res = await fetch('/api/audit-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName,
-          email,
-          industry,
-          companySize,
-          hasSOC,
-          hasPenTestRecently,
-          cloudProviders: cloudMulti ? ['AWS', 'GCP', 'Azure'] : ['AWS']
-        })
-      });
-
-      const data = await res.json();
-      if (data.success && data.report) {
-        renderRiskReport(data.report);
-      } else {
-        showToast(data.message || 'Error processing assessment', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Network error during risk computation.', 'error');
-    } finally {
-      submitBtn.innerHTML = originalBtnHtml;
-      submitBtn.disabled = false;
-    }
-  });
-
-  if (recalcBtn) {
-    recalcBtn.addEventListener('click', () => {
-      if (resultBox) resultBox.classList.add('hidden');
-      form.scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-}
-
-function renderRiskReport(report) {
-  const resultBox = document.getElementById('calculator-result');
-  if (!resultBox) return;
-
-  document.getElementById('result-ticket-id').textContent = report.id;
-  document.getElementById('risk-score-value').textContent = report.riskScore;
-  document.getElementById('risk-posture-label').textContent = report.threatPosture;
-  document.getElementById('risk-posture-label').style.color = report.postureColor;
-
-  const scoreCircle = document.getElementById('risk-score-circle');
-  if (scoreCircle) {
-    scoreCircle.style.borderColor = report.postureColor;
-    scoreCircle.style.boxShadow = `0 0 25px ${report.postureColor}55`;
-  }
-
-  document.getElementById('result-company-name').textContent = report.companyName;
-  document.getElementById('result-cve-count').textContent = `~${report.estimatedVulnerabilities} Exposure Points`;
-  document.getElementById('result-package').textContent = report.suggestedPackage;
-
-  const recList = document.getElementById('recommendations-list');
-  recList.innerHTML = '';
-  report.recommendations.forEach((rec) => {
-    const li = document.createElement('li');
-    li.textContent = rec;
-    recList.appendChild(li);
-  });
-
-  resultBox.classList.remove('hidden');
-  resultBox.scrollIntoView({ behavior: 'smooth' });
-
-  // Pre-fill consultation form with company & email
-  const contactName = document.getElementById('contact-name');
-  const contactEmail = document.getElementById('contact-email');
-  const contactCompany = document.getElementById('contact-company');
-  const contactMessage = document.getElementById('contact-message');
-
-  if (contactCompany) contactCompany.value = report.companyName;
-  if (contactEmail) contactEmail.value = report.email;
-  if (contactMessage) {
-    contactMessage.value = `Risk Assessment ID: ${report.id}. Risk Score: ${report.riskScore}/100 (${report.threatPosture}). Suggested Scope: ${report.suggestedPackage}`;
-  }
-}
-
-/* ==========================================================================
-   4. TERMINAL VAPT SCANNER SIMULATOR
-   ========================================================================== */
-function initTerminalScanner() {
-  const runBtn = document.getElementById('run-terminal-scan-btn');
-  const clearBtn = document.getElementById('clear-terminal-btn');
-  const screen = document.getElementById('terminal-screen');
-
-  if (!runBtn || !screen) return;
-
-  const scanSteps = [
-    { text: 'root@aegis:~# aegis-recon --target edge.gateway.corp --deep-enum', color: 'text-white' },
-    { text: '[+] Resolving DNS records, CDN proxies & BGP routing ASNs...', color: 'text-muted' },
-    { text: '[+] Discovered 24 open ports: 22(SSH), 80(HTTP), 443(HTTPS), 6443(Kubernetes API), 9200(Elasticsearch)', color: 'text-cyan' },
-    { text: '[!] WARNING: Elasticsearch cluster (port 9200) unauthenticated cluster query allowed.', color: 'text-danger' },
-    { text: '[+] Checking TLS cipher suites: Found deprecated TLS 1.0 & Weak CBC Ciphers.', color: 'text-warning' },
-    { text: '[+] Fuzzing API endpoints: /api/v1/user/export [SQLi Blind Timing detected]', color: 'text-danger' },
-    { text: '[+] Analyzing container egress: Pod metadata service instance credentials reachable.', color: 'text-danger' },
-    { text: '[✔] Scan completed in 3.42s. 3 Critical, 2 High, 4 Medium findings identified.', color: 'text-green' },
-    { text: '[✔] Automated remediation patches staged for Aegis Managed SOC.', color: 'text-cyan' }
-  ];
-
-  let isScanning = false;
-
-  runBtn.addEventListener('click', () => {
-    if (isScanning) return;
-    isScanning = true;
-    screen.innerHTML = '';
-
-    let i = 0;
-    function printNextLine() {
-      if (i < scanSteps.length) {
-        const line = document.createElement('div');
-        line.className = `term-line ${scanSteps[i].color}`;
-        line.textContent = scanSteps[i].text;
-        screen.appendChild(line);
-        screen.scrollTop = screen.scrollHeight;
-        i++;
-        setTimeout(printNextLine, 450);
-      } else {
-        isScanning = false;
-        const promptLine = document.createElement('div');
-        promptLine.className = 'term-line';
-        promptLine.innerHTML = '<span class="prompt text-green">root@aegis:~#</span> <span class="cursor-blink">_</span>';
-        screen.appendChild(promptLine);
-        screen.scrollTop = screen.scrollHeight;
-      }
-    }
-
-    printNextLine();
-  });
-
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      screen.innerHTML = `
-        <div class="term-line text-cyan">Aegis Offensive Engine v4.8 [Ready]</div>
-        <div class="term-line text-muted">Type or click 'Run Simulation' to execute multi-vector cloud perimeter inspection.</div>
-        <div class="term-line"><span class="prompt text-green">root@aegis:~#</span> <span class="cursor-blink">_</span></div>
-      `;
-    });
-  }
-}
-
-/* ==========================================================================
-   5. CONTACT & EMERGENCY INCIDENT FORM
-   ========================================================================== */
-function initContactForm() {
-  const form = document.getElementById('contact-booking-form');
-  const feedback = document.getElementById('contact-feedback');
-  const tabStandard = document.getElementById('tab-standard');
-  const tabEmergency = document.getElementById('tab-emergency');
-  const urgencyInput = document.getElementById('form-urgency-input');
-  const submitBtn = document.getElementById('contact-submit-btn');
-
-  if (tabStandard && tabEmergency && urgencyInput) {
-    tabStandard.addEventListener('click', () => {
-      tabStandard.classList.add('active');
-      tabEmergency.classList.remove('active');
-      urgencyInput.value = 'Standard';
-      if (submitBtn) {
-        submitBtn.className = 'btn btn-primary btn-block btn-lg';
-        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Security Request';
-      }
-    });
-
-    tabEmergency.addEventListener('click', () => {
-      tabEmergency.classList.add('active');
-      tabStandard.classList.remove('active');
-      urgencyInput.value = 'Emergency';
-      if (submitBtn) {
-        submitBtn.className = 'btn btn-danger btn-block btn-lg';
-        submitBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> DISPATCH INCIDENT COMMANDER (URGENT)';
-      }
-    });
-  }
-
-  if (!form) return;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const originalBtnContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Transmitting Encrypted Payload...';
-    submitBtn.disabled = true;
-
-    const payload = {
-      name: document.getElementById('contact-name').value.trim(),
-      email: document.getElementById('contact-email').value.trim(),
-      phone: document.getElementById('contact-phone').value.trim(),
-      company: document.getElementById('contact-company').value.trim(),
-      serviceType: document.getElementById('contact-service').value,
-      urgency: urgencyInput ? urgencyInput.value : 'Standard',
-      message: document.getElementById('contact-message').value.trim()
-    };
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        feedback.className = `feedback-toast ${payload.urgency === 'Emergency' ? 'danger' : 'success'}`;
-        feedback.innerHTML = `
-          <strong>${data.message}</strong>
-          <div class="mono-code text-xs mt-1">Ticket Reference: ${data.ticketId} | SLA Response: ${data.responseTime}</div>
-        `;
-        feedback.classList.remove('hidden');
-        showToast(data.message, payload.urgency === 'Emergency' ? 'emergency' : 'success');
-        form.reset();
-      } else {
-        showToast(data.message || 'Failed to submit request', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Error communicating with defense gateway', 'error');
-    } finally {
-      submitBtn.innerHTML = originalBtnContent;
-      submitBtn.disabled = false;
-    }
-  });
-}
-
-/* ==========================================================================
-   6. SERVICE CARD BUTTON ACTIONS
-   ========================================================================== */
-function initServiceButtons() {
-  const buttons = document.querySelectorAll('.select-service-btn');
-  const serviceSelect = document.getElementById('contact-service');
-  const contactSection = document.getElementById('contact');
-
-  buttons.forEach((btn) => {
+/* ══════════════════════════════════════════════════════════════════════
+   2. SIDEBAR NAV — Collapsible Groups + Active State
+══════════════════════════════════════════════════════════════════════ */
+function initSidebar() {
+  // Collapsible groups
+  document.querySelectorAll('.sb-has-children').forEach(btn => {
     btn.addEventListener('click', () => {
-      const serviceId = btn.getAttribute('data-service-id');
-      if (serviceSelect) {
-        if (serviceId === 'vapt') serviceSelect.value = 'Penetration Testing & VAPT';
-        else if (serviceId === 'soc') serviceSelect.value = '24/7 Managed SOC & MDR';
-        else if (serviceId === 'red-team') serviceSelect.value = 'Red Teaming & Simulation';
-        else if (serviceId === 'cloud-security') serviceSelect.value = 'Cloud Zero-Trust Architecture';
-        else if (serviceId === 'incident-response') {
-          serviceSelect.value = 'Emergency Incident Response';
-          const tabEmergency = document.getElementById('tab-emergency');
-          if (tabEmergency) tabEmergency.click();
-        } else if (serviceId === 'compliance') serviceSelect.value = 'Compliance & GRC (ISO/SOC2/PCI)';
-      }
+      const grp = btn.closest('.sb-group');
+      const isOpen = grp.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.sb-group.open').forEach(g => g.classList.remove('open'));
+      if (!isOpen) grp.classList.add('open');
+    });
+  });
 
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' });
+  // Nav item active state
+  document.querySelectorAll('.sb-item:not(.sb-has-children)').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (item.tagName === 'A') {
+        document.querySelectorAll('.sb-item.active').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
       }
     });
   });
 }
 
-/* ==========================================================================
-   7. LIVE TELEMETRY LOG STREAM (HERO)
-   ========================================================================== */
-function initTelemetryLogStream() {
-  const stream = document.getElementById('hero-log-stream');
-  if (!stream) return;
+/* ══════════════════════════════════════════════════════════════════════
+   3. LIVE TERMINAL IN SIDEBAR
+══════════════════════════════════════════════════════════════════════ */
+function initTerminal() {
+  const body = document.getElementById('sb-terminal-body');
+  if (!body) return;
 
-  const sampleEvents = [
-    { text: '[{TIME}] SSH Brute-Force from AS4812 blocked by fail2ban mesh.', color: 'text-cyan' },
-    { text: '[{TIME}] Anomalous AWS KMS decrypt spike detected - Rate limited.', color: 'text-warning' },
-    { text: '[{TIME}] Zero-Day signature matched: CVE-2026-8911 neutralized.', color: 'text-danger' },
-    { text: '[{TIME}] Automated TLS certificate renewal completed across 48 domains.', color: 'text-green' },
-    { text: '[{TIME}] SOC Analyst tier-3 containment dispatched for node #819.', color: 'text-muted' },
-    { text: '[{TIME}] API Gateway WAF blocked SQL injection attempt on /v2/auth.', color: 'text-cyan' }
+  const lines = [
+    '<span class="td">&gt;</span> Initializing CYBERNEXUS...',
+    '<span class="td">&gt;</span> Security systems <span class="tc">ONLINE</span>',
+    '<span class="td">&gt;</span> Scanning vulnerabilities...',
+    '<span class="td">&gt;</span> Monitoring network traffic...',
+    '<span class="td">&gt;</span> Threat intel feed <span class="tc">SYNCED</span>',
+    '<span class="td">&gt;</span> Updating threat intelligence...',
+    '<span class="td">&gt;</span> System status: <span class="tc">SECURE</span>',
+    '<span class="td">&gt;</span> <span class="tr">ALERT:</span> 3 new CVEs detected',
+    '<span class="td">&gt;</span> Auto-patching shield nodes...',
+    '<span class="td">&gt;</span> Cyber news feed <span class="tc">LOADED</span>',
+    '<span class="td">&gt;</span> Awaiting commands...',
+    '<span class="td">&gt;</span> IDS/IPS signatures <span class="tc">UPDATED</span>',
+    '<span class="td">&gt;</span> <span class="tr">WARN:</span> brute-force on SSH:22',
+    '<span class="td">&gt;</span> Blocked: <span class="tr">192.168.4.101</span>',
   ];
+
+  let idx = 0;
+  const MAX = 5;
+
+  // Seed initial lines (no animation)
+  for (let i = 0; i < Math.min(4, MAX); i++) {
+    const el = document.createElement('div');
+    el.className = 'sb-term-line';
+    el.style.cssText = 'opacity:1;animation:none;';
+    el.innerHTML = lines[i];
+    body.appendChild(el);
+    idx++;
+  }
 
   setInterval(() => {
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    const ev = sampleEvents[Math.floor(Math.random() * sampleEvents.length)];
-
-    const line = document.createElement('div');
-    line.className = `log-line ${ev.color}`;
-    line.textContent = ev.text.replace('{TIME}', timeStr);
-
-    stream.appendChild(line);
-    if (stream.children.length > 5) {
-      stream.removeChild(stream.firstElementChild);
-    }
-  }, 4000);
+    if (body.children.length >= MAX) body.removeChild(body.firstChild);
+    const el = document.createElement('div');
+    el.className = 'sb-term-line';
+    el.innerHTML = lines[idx % lines.length];
+    body.appendChild(el);
+    idx++;
+  }, 2400);
 }
 
-/* ==========================================================================
-   8. MOBILE MENU & UTILITIES
-   ========================================================================== */
-function initMobileMenu() {
-  const toggle = document.getElementById('mobile-menu-toggle');
-  const menu = document.getElementById('nav-menu');
+/* ══════════════════════════════════════════════════════════════════════
+   4. STAT COUNTER ANIMATIONS
+══════════════════════════════════════════════════════════════════════ */
+function initStatCounters() {
+  function animateCounter(el, target, format, duration = 1400) {
+    if (!el) return;
+    const start = performance.now();
+    function step(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = format(Math.round(eased * target));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
 
-  if (toggle && menu) {
-    toggle.addEventListener('click', () => {
-      menu.classList.toggle('open');
-    });
+  animateCounter(document.getElementById('ov-score'),     86,  v => v + '%');
+  animateCounter(document.getElementById('ov-crit'),       4,  v => String(v).padStart(2,'0'));
+  animateCounter(document.getElementById('ov-threats'),    3,  v => String(v).padStart(2,'0'));
+  animateCounter(document.getElementById('ov-assets'),   248,  v => String(v));
+  animateCounter(document.getElementById('ov-incidents'),  2,  v => String(v).padStart(2,'0'));
+}
 
-    // Close on navigation link click
-    document.querySelectorAll('.nav-link').forEach((link) => {
-      link.addEventListener('click', () => {
-        menu.classList.remove('open');
-      });
+/* ══════════════════════════════════════════════════════════════════════
+   5. VULNERABILITY BARS — Animated fill
+══════════════════════════════════════════════════════════════════════ */
+function initVulnBars() {
+  // Reset widths to 0, then animate to target
+  const bars = document.querySelectorAll('.vb-fill');
+  bars.forEach(bar => {
+    const target = bar.dataset.target || '0';
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = target + '%'; }, 400);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   6. BOTTOM STATUS BAR — Clock + Live Attack Counter
+══════════════════════════════════════════════════════════════════════ */
+function initBottomBar() {
+  // Live UTC clock
+  const clockEl = document.getElementById('bb-clock');
+  function updateClock() {
+    if (!clockEl) return;
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    clockEl.textContent = `UTC ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Attack counter fluctuation
+  const attackEl = document.getElementById('bb-attacks');
+  let attacks = 1247;
+  function updateAttacks() {
+    attacks += Math.floor(Math.random() * 8) - 2;
+    if (attacks < 1200) attacks = 1200;
+    if (attackEl) attackEl.textContent = attacks.toLocaleString();
+  }
+  setInterval(updateAttacks, 2800);
+
+  // Notification counter
+  const notifEl = document.getElementById('th-notif-count');
+  let notifCount = 3;
+  const notifBtn  = document.getElementById('th-notif-btn');
+  if (notifBtn) {
+    notifBtn.addEventListener('click', () => {
+      notifCount = 0;
+      if (notifEl) { notifEl.style.display = 'none'; }
+      notifBtn.style.borderColor = 'rgba(0,229,255,0.25)';
     });
   }
 }
 
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
+/* ══════════════════════════════════════════════════════════════════════
+   7. CYBER NEWS — Fetch from API and render
+══════════════════════════════════════════════════════════════════════ */
+function initNewsSection() {
+  const grid    = document.getElementById('news-grid');
+  const filters = document.getElementById('news-filters');
+  if (!grid) return;
 
-  const toast = document.createElement('div');
-  toast.className = `toast ${type === 'emergency' ? 'toast-emergency' : ''}`;
-  toast.innerHTML = `
-    <i class="fa-solid ${type === 'emergency' ? 'fa-triangle-exclamation text-danger' : 'fa-circle-check text-green'}"></i>
-    <span>${escapeHtml(message)}</span>
-  `;
+  let allNews = [];
 
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 4500);
+  async function fetchNews(cat = 'All') {
+    const url = cat === 'All' ? '/api/cyber-news' : `/api/cyber-news?category=${encodeURIComponent(cat)}`;
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (data.success) {
+        allNews = data.news;
+        renderNews(data.news);
+      }
+    } catch (err) {
+      grid.innerHTML = `<div class="news-loading"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp;Failed to load intel feed.</div>`;
+    }
+  }
+
+  function renderNews(items) {
+    if (!items || items.length === 0) {
+      grid.innerHTML = `<div class="news-loading">No news matching that filter.</div>`;
+      return;
+    }
+
+    grid.innerHTML = items.map(n => {
+      const sevClass = n.severity === 'CRITICAL' ? 'CRITICAL' : (n.severity === 'HIGH' ? 'HIGH' : 'MEDIUM');
+      const cardBorder = n.severity === 'CRITICAL' ? '' : (n.severity === 'HIGH' ? ' high' : ' medium');
+      return `
+        <article class="news-card${cardBorder}">
+          <div class="news-severity ${sevClass}">
+            <i class="fa-solid fa-circle" style="font-size:0.45rem"></i>
+            ${n.severity}
+          </div>
+          <h3 class="news-title">${n.title}</h3>
+          <div class="news-meta">${n.source} &nbsp;|&nbsp; ${n.time} &nbsp;|&nbsp; ${n.cve}</div>
+          <p class="news-summary">${n.summary}</p>
+          <a href="javascript:void(0)" class="news-read-btn" data-id="${n.id}">
+            READ ARTICLE <i class="fa-solid fa-arrow-right" style="font-size:0.55rem"></i>
+          </a>
+        </article>
+      `;
+    }).join('');
+
+    // Article expand on click
+    grid.querySelectorAll('.news-read-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const news = allNews.find(n => n.id === btn.dataset.id);
+        if (!news) return;
+        showNewsModal(news);
+      });
+    });
+  }
+
+  // News Filters
+  if (filters) {
+    filters.querySelectorAll('.nf-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filters.querySelectorAll('.nf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        fetchNews(btn.dataset.cat);
+      });
+    });
+  }
+
+  fetchNews();
+
+  // Auto-refresh news every 60s
+  setInterval(() => {
+    const activeBtn = filters ? filters.querySelector('.nf-btn.active') : null;
+    fetchNews(activeBtn ? activeBtn.dataset.cat : 'All');
+  }, 60000);
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+/* ══════════════════════════════════════════════════════════════════════
+   8. NEWS MODAL (expand article)
+══════════════════════════════════════════════════════════════════════ */
+function showNewsModal(news) {
+  // Remove existing modal
+  const existing = document.getElementById('news-modal');
+  if (existing) existing.remove();
+
+  const sevColor = news.severity === 'CRITICAL' ? '#FF0055' : (news.severity === 'HIGH' ? '#FFB800' : '#00E5FF');
+
+  const modal = document.createElement('div');
+  modal.id = 'news-modal';
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(3,10,18,0.88);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    animation: modal-fade-in 0.25s ease forwards;
+  `;
+
+  modal.innerHTML = `
+    <style>
+      @keyframes modal-fade-in {
+        from { opacity: 0; transform: scale(0.97); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+    </style>
+    <div style="
+      background: rgba(6,14,28,0.98);
+      border: 1px solid ${sevColor}55;
+      border-top: 2px solid ${sevColor};
+      border-radius: 10px;
+      padding: 28px 32px;
+      max-width: 560px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.7), 0 0 40px ${sevColor}15;
+    ">
+      <button id="modal-close-btn" style="
+        position: absolute; top: 14px; right: 16px;
+        background: none; border: none;
+        color: #445570; font-size: 1rem; cursor: pointer;
+        transition: color 0.2s;
+      " aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div style="
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: 'JetBrains Mono',monospace; font-size: 0.58rem;
+        letter-spacing: 0.12em; padding: 3px 10px; border-radius: 3px;
+        margin-bottom: 14px; text-transform: uppercase;
+        background: ${sevColor}18; color: ${sevColor};
+        border: 1px solid ${sevColor}40;
+      ">
+        <i class="fa-solid fa-circle" style="font-size:0.4rem"></i>
+        ${news.severity}
+      </div>
+
+      <h2 style="
+        font-family: 'Orbitron',sans-serif; font-size: 0.95rem;
+        font-weight: 800; color: #ffffff; letter-spacing: 0.04em;
+        line-height: 1.35; margin-bottom: 10px; text-transform: uppercase;
+      ">${news.title}</h2>
+
+      <div style="
+        font-family: 'JetBrains Mono',monospace; font-size: 0.62rem;
+        color: #445570; letter-spacing: 0.06em; margin-bottom: 14px;
+      ">${news.source} &nbsp;|&nbsp; ${news.time} &nbsp;|&nbsp; ${news.cve}</div>
+
+      <p style="
+        font-family: 'Inter',sans-serif; font-size: 0.82rem;
+        color: #7A93B5; line-height: 1.65; margin-bottom: 16px;
+      ">${news.summary}</p>
+
+      <div style="
+        background: rgba(0,229,255,0.05);
+        border: 1px solid rgba(0,229,255,0.18);
+        border-radius: 6px; padding: 12px 14px;
+      ">
+        <div style="
+          font-family: 'JetBrains Mono',monospace; font-size: 0.58rem;
+          letter-spacing: 0.14em; color: #00E5FF; text-transform: uppercase; margin-bottom: 5px;
+        "><i class="fa-solid fa-shield-halved"></i>&nbsp; MITIGATION</div>
+        <p style="
+          font-family: 'Rajdhani',sans-serif; font-size: 0.88rem;
+          color: #CDD9EC; line-height: 1.5;
+        ">${news.mitigation}</p>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close handlers
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.getElementById('modal-close-btn').addEventListener('click', () => modal.remove());
+  document.addEventListener('keydown', function onEsc(e) {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', onEsc); }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   9. MOBILE SIDEBAR TOGGLE
+══════════════════════════════════════════════════════════════════════ */
+function initMobileToggle() {
+  const toggle  = document.getElementById('th-mobile-toggle');
+  const sidebar = document.getElementById('sidebar');
+  if (!toggle || !sidebar) return;
+
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('mobile-open');
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 900 &&
+        !sidebar.contains(e.target) &&
+        !toggle.contains(e.target)) {
+      sidebar.classList.remove('mobile-open');
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   10. RUN SCAN BUTTON
+══════════════════════════════════════════════════════════════════════ */
+function initScanButton() {
+  const btn = document.getElementById('btn-run-scan');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Scanning...';
+    btn.disabled = true;
+
+    // Fetch live threat data
+    try {
+      const res  = await fetch('/api/threat-monitoring');
+      const data = await res.json();
+      if (data.success) {
+        // Update stat counter
+        const assetsEl = document.getElementById('ov-assets');
+        if (assetsEl) {
+          assetsEl.style.transition = 'all 0.4s';
+          assetsEl.style.color = '#00FF88';
+          setTimeout(() => { assetsEl.style.color = ''; }, 1200);
+        }
+      }
+    } catch (e) { /* silent */ }
+
+    await new Promise(r => setTimeout(r, 2200));
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Scan Complete';
+    btn.style.color = '#00FF88';
+    btn.style.borderColor = '#00FF88';
+    await new Promise(r => setTimeout(r, 1800));
+    btn.innerHTML = orig;
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.disabled = false;
+  });
 }

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER SHIELD SECURITY // OPERATOR PORTAL ACCESS</title>
+  <meta name="description" content="Secure Operator Portal Login - Cyber Shield Security Command Center. Authenticate to access the CyberNexus Security Operations Center.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --cyber-bg:          #030a12;
+      --cyber-bg-2:        #061120;
+      --panel-bg:          rgba(5, 14, 28, 0.92);
+      --panel-border:      rgba(0, 229, 255, 0.22);
+
+      --neon-green:        #00FF88;
+      --neon-green-glow:   rgba(0, 255, 136, 0.45);
+      --neon-green-dim:    rgba(0, 255, 136, 0.12);
+
+      --neon-cyan:         #00E5FF;
+      --neon-cyan-glow:    rgba(0, 229, 255, 0.45);
+      --neon-cyan-dim:     rgba(0, 229, 255, 0.10);
+
+      --neon-danger:       #FF0055;
+      --neon-danger-glow:  rgba(255, 0, 85, 0.45);
+
+      --neon-amber:        #FFB800;
+      --neon-amber-glow:   rgba(255, 184, 0, 0.45);
+
+      --text-pure:   #FFFFFF;
+      --text-main:   #CDD9EC;
+      --text-muted:  #7A93B5;
+      --text-dim:    #445570;
+
+      --font-hud:    'Orbitron', sans-serif;
+      --font-code:   'Rajdhani', sans-serif;
+      --font-mono:   'JetBrains Mono', monospace;
+      --font-sans:   'Inter', sans-serif;
+
+      --radius:      8px;
+      --radius-sm:   4px;
+      --transition:  all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--cyber-bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Background */
+    #matrix-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      opacity: 0.18; pointer-events: none;
+    }
+
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    .bg-radial {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 229, 255, 0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 50% at 10% 90%, rgba(0, 255, 136, 0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, rgba(0, 229, 255, 0.06) 0%, transparent 60%);
+    }
+
+    .vignette {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(3, 10, 18, 0.85) 100%);
+    }
+
+    .page-wrapper {
+      position: relative; z-index: 10;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+
+    /* Header */
+    .login-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 36px;
+      border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+      background: rgba(3, 10, 18, 0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand-badge {
+      display: flex; align-items: center; gap: 12px; text-decoration: none;
+    }
+
+    .hex-logo { width: 44px; height: 44px; flex-shrink: 0; }
+
+    .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+
+    .brand-name {
+      font-family: var(--font-hud); font-size: 0.82rem; font-weight: 800;
+      letter-spacing: 0.14em; color: var(--neon-cyan);
+      text-shadow: 0 0 12px var(--neon-cyan-glow);
+    }
+
+    .brand-sub {
+      font-family: var(--font-hud); font-size: 0.55rem; font-weight: 600;
+      letter-spacing: 0.22em; color: var(--text-muted);
+    }
+
+    .header-right { display: flex; align-items: center; gap: 18px; }
+
+    .header-status {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--neon-green); letter-spacing: 0.08em;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green-glow);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--neon-green-glow); }
+      50%       { opacity: 0.5; box-shadow: 0 0 4px var(--neon-green-glow); }
+    }
+
+    .header-back-btn {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+      color: var(--text-muted); text-decoration: none;
+      border: 1px solid rgba(0, 229, 255, 0.18);
+      padding: 6px 14px; border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .header-back-btn:hover {
+      color: var(--neon-cyan); border-color: var(--neon-cyan);
+      box-shadow: 0 0 12px var(--neon-cyan-dim);
+    }
+
+    /* Main Layout */
+    .login-main {
+      flex: 1; display: grid;
+      grid-template-columns: 1fr 480px;
+      align-items: stretch;
+    }
+
+    /* Left Panel */
+    .info-panel {
+      padding: 48px 52px;
+      display: flex; flex-direction: column;
+      justify-content: center; gap: 32px;
+      border-right: 1px solid rgba(0, 229, 255, 0.12);
+    }
+
+    .info-headline {
+      font-family: var(--font-hud);
+      font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+      font-weight: 900; line-height: 1.15;
+      letter-spacing: 0.04em; color: var(--text-pure); text-transform: uppercase;
+    }
+
+    .info-headline .hl-cyan  { color: var(--neon-cyan);  text-shadow: 0 0 18px var(--neon-cyan-glow); }
+    .info-headline .hl-green { color: var(--neon-green); text-shadow: 0 0 18px var(--neon-green-glow); }
+
+    .info-subtext {
+      font-family: var(--font-code); font-size: 1rem;
+      color: var(--text-muted); line-height: 1.65; max-width: 480px;
+    }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    }
+
+    .stat-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius); padding: 18px 16px;
+      position: relative; overflow: hidden; transition: var(--transition);
+    }
+
+    .stat-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.04), transparent 60%);
+      pointer-events: none;
+    }
+
+    .stat-card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px var(--neon-cyan-dim);
+    }
+
+    .stat-value {
+      font-family: var(--font-hud); font-size: 1.7rem; font-weight: 800;
+      color: var(--neon-green); text-shadow: 0 0 14px var(--neon-green-glow); display: block;
+    }
+
+    .stat-value.danger { color: var(--neon-danger); text-shadow: 0 0 14px var(--neon-danger-glow); }
+    .stat-value.cyan   { color: var(--neon-cyan);   text-shadow: 0 0 14px var(--neon-cyan-glow); }
+
+    .stat-label {
+      font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+      text-transform: uppercase; margin-top: 4px;
+    }
+
+    /* Terminal */
+    .terminal-panel {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: var(--radius); overflow: hidden;
+    }
+
+    .terminal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px;
+      background: rgba(0, 255, 136, 0.07);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.15);
+    }
+
+    .terminal-title {
+      font-family: var(--font-mono); font-size: 0.68rem;
+      letter-spacing: 0.12em; color: var(--neon-green); text-transform: uppercase;
+    }
+
+    .terminal-controls { display: flex; gap: 6px; }
+
+    .t-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .t-dot.red   { background: #ff5f57; }
+    .t-dot.amber { background: #febc2e; }
+    .t-dot.green { background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green-glow); }
+
+    .terminal-body {
+      padding: 12px 14px; height: 130px; overflow: hidden; position: relative;
+    }
+
+    .terminal-line {
+      font-family: var(--font-mono); font-size: 0.68rem; line-height: 1.8;
+      color: var(--neon-green); opacity: 0; animation: term-in 0.4s forwards;
+    }
+
+    .terminal-line .term-dim    { color: var(--text-dim); }
+    .terminal-line .term-cyan   { color: var(--neon-cyan); }
+    .terminal-line .term-danger { color: var(--neon-danger); }
+
+    @keyframes term-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Feature list */
+    .feature-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .feature-item {
+      display: flex; align-items: center; gap: 12px;
+      font-family: var(--font-code); font-size: 0.95rem; color: var(--text-main);
+    }
+
+    .feature-icon {
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      background: var(--neon-green-dim); border: 1px solid rgba(0, 255, 136, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: var(--neon-green); flex-shrink: 0;
+    }
+
+    .feature-icon.cyan {
+      background: var(--neon-cyan-dim); border-color: rgba(0, 229, 255, 0.25); color: var(--neon-cyan);
+    }
+
+    /* Right Panel */
+    .form-panel {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 48px 44px;
+      background: rgba(4, 11, 22, 0.60);
+      backdrop-filter: blur(20px);
+    }
+
+    .login-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 38px 36px; position: relative; overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(0, 229, 255, 0.06),
+        0 8px 60px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(0, 229, 255, 0.1);
+    }
+
+    .login-card::before, .login-card::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px;
+      border-color: var(--neon-cyan); border-style: solid; pointer-events: none;
+    }
+
+    .login-card::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+    .login-card::after  { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+    .scan-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      opacity: 0.4; animation: scan 4s linear infinite; pointer-events: none;
+    }
+
+    @keyframes scan {
+      0%   { top: 0%; opacity: 0; }
+      5%   { opacity: 0.4; }
+      95%  { opacity: 0.4; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .card-logo-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-bottom: 6px;
+    }
+
+    .card-shield-icon { width: 38px; height: 38px; }
+
+    .card-title {
+      font-family: var(--font-hud); font-size: 1.25rem; font-weight: 900;
+      color: var(--text-pure); letter-spacing: 0.06em; text-align: center;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
+      letter-spacing: 0.15em; text-align: center; text-transform: uppercase; margin-bottom: 28px;
+    }
+
+    .card-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      margin-bottom: 28px; opacity: 0.35;
+    }
+
+    .clearance-badge {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em;
+      color: var(--neon-amber);
+      background: rgba(255, 184, 0, 0.07);
+      border: 1px solid rgba(255, 184, 0, 0.2);
+      border-radius: var(--radius-sm); padding: 7px 14px; margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font-mono); font-size: 0.65rem;
+      letter-spacing: 0.12em; color: var(--text-muted);
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+
+    .form-label i { font-size: 0.7rem; color: var(--neon-cyan); }
+
+    .form-input-wrap { position: relative; }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      border-radius: var(--radius-sm);
+      padding: 12px 44px 12px 14px;
+      font-family: var(--font-mono); font-size: 0.85rem;
+      color: var(--text-pure); outline: none;
+      transition: var(--transition); letter-spacing: 0.04em;
+    }
+
+    .form-input::placeholder { color: var(--text-dim); }
+
+    .form-input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.12), 0 0 20px rgba(0, 229, 255, 0.08);
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .form-input.error {
+      border-color: var(--neon-danger);
+      box-shadow: 0 0 0 3px rgba(255, 0, 85, 0.12);
+    }
+
+    .input-icon {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      color: var(--text-dim); font-size: 0.8rem; cursor: pointer; transition: var(--transition);
+    }
+
+    .input-icon:hover { color: var(--neon-cyan); }
+
+    .form-options {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;
+    }
+
+    .custom-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .custom-check input { display: none; }
+
+    .check-box {
+      width: 16px; height: 16px;
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      border-radius: 3px; background: rgba(0, 229, 255, 0.06);
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition); flex-shrink: 0;
+    }
+
+    .check-box i { font-size: 0.55rem; color: var(--neon-cyan); opacity: 0; transition: var(--transition); }
+
+    .custom-check input:checked + .check-box {
+      background: rgba(0, 229, 255, 0.18); border-color: var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan-dim);
+    }
+
+    .custom-check input:checked + .check-box i { opacity: 1; }
+
+    .check-label {
+      font-family: var(--font-mono); font-size: 0.68rem;
+      color: var(--text-muted); letter-spacing: 0.06em;
+    }
+
+    .forgot-link {
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--neon-cyan);
+      text-decoration: none; letter-spacing: 0.06em; transition: var(--transition);
+    }
+
+    .forgot-link:hover { color: var(--text-pure); text-shadow: 0 0 10px var(--neon-cyan-glow); }
+
+    .btn-login {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.18) 0%, rgba(0, 255, 136, 0.12) 100%);
+      border: 1px solid var(--neon-cyan);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-hud); font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.16em; color: var(--neon-cyan); cursor: pointer;
+      transition: var(--transition); position: relative; overflow: hidden;
+      text-transform: uppercase;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .btn-login::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.22), rgba(0, 255, 136, 0.18));
+      opacity: 0; transition: var(--transition);
+    }
+
+    .btn-login:hover {
+      box-shadow: 0 0 30px var(--neon-cyan-glow), 0 0 60px rgba(0, 229, 255, 0.15);
+      color: var(--text-pure); transform: translateY(-1px);
+    }
+
+    .btn-login:hover::before { opacity: 1; }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login span, .btn-login i { position: relative; z-index: 1; }
+
+    .btn-login.loading { pointer-events: none; opacity: 0.75; }
+
+    .spinner {
+      display: none; width: 14px; height: 14px;
+      border: 2px solid rgba(0, 229, 255, 0.3);
+      border-top-color: var(--neon-cyan); border-radius: 50%;
+      animation: spin 0.7s linear infinite; position: relative; z-index: 1;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-login.loading .spinner  { display: block; }
+    .btn-login.loading .btn-icon { display: none; }
+
+    .login-alert {
+      display: none; align-items: flex-start; gap: 10px;
+      padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+      font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.5; letter-spacing: 0.04em;
+    }
+
+    .login-alert.show    { display: flex; }
+    .login-alert.success { background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.3); color: var(--neon-green); }
+    .login-alert.error   { background: rgba(255, 0, 85, 0.08);  border: 1px solid rgba(255, 0, 85, 0.3);  color: var(--neon-danger); }
+
+    .session-card {
+      display: none; background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.25); border-radius: var(--radius);
+      padding: 20px; gap: 14px; flex-direction: column;
+    }
+
+    .session-card.show { display: flex; }
+
+    .session-title {
+      font-family: var(--font-hud); font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--neon-green);
+      text-shadow: 0 0 10px var(--neon-green-glow); text-transform: uppercase;
+    }
+
+    .session-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--font-mono); font-size: 0.7rem;
+      padding: 6px 0; border-bottom: 1px solid rgba(0, 255, 136, 0.1); color: var(--text-main);
+    }
+
+    .session-row:last-child { border-bottom: none; }
+    .session-row .key { color: var(--text-muted); letter-spacing: 0.06em; }
+    .session-row .val { color: var(--neon-green); letter-spacing: 0.04em; }
+    .session-row .val.cyan  { color: var(--neon-cyan); }
+    .session-row .val.amber { color: var(--neon-amber); }
+
+    .token-display {
+      font-family: var(--font-mono); font-size: 0.62rem; color: var(--neon-cyan);
+      background: rgba(0, 229, 255, 0.07); border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: var(--radius-sm); padding: 8px 10px; letter-spacing: 0.06em; word-break: break-all;
+    }
+
+    .btn-dashboard {
+      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.18), rgba(0, 229, 255, 0.12));
+      border: 1px solid var(--neon-green); border-radius: var(--radius-sm);
+      font-family: var(--font-hud); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.14em; color: var(--neon-green);
+      text-decoration: none; transition: var(--transition); text-transform: uppercase;
+    }
+
+    .btn-dashboard:hover { box-shadow: 0 0 24px var(--neon-green-glow); color: var(--text-pure); }
+
+    .login-footer {
+      text-align: center; margin-top: 20px;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      color: var(--text-dim); letter-spacing: 0.06em;
+    }
+
+    .login-footer a { color: var(--neon-cyan); text-decoration: none; transition: var(--transition); }
+    .login-footer a:hover { color: var(--text-pure); }
+
+    /* Status Bar */
+    .status-bar {
+      display: flex; align-items: center; justify-content: center; gap: 28px;
+      padding: 9px 36px;
+      background: rgba(0, 0, 0, 0.55);
+      border-top: 1px solid rgba(0, 229, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .status-item {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+      text-transform: uppercase; white-space: nowrap;
+    }
+
+    .status-item .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    .dot.green  { background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green-glow); animation: pulse-dot 2s infinite; }
+    .dot.cyan   { background: var(--neon-cyan);  box-shadow: 0 0 6px var(--neon-cyan-glow);  animation: pulse-dot 2.5s infinite; }
+    .dot.amber  { background: var(--neon-amber); box-shadow: 0 0 6px var(--neon-amber-glow); animation: pulse-dot 3s infinite; }
+
+    @media (max-width: 900px) {
+      .login-main { grid-template-columns: 1fr; }
+      .info-panel { display: none; }
+      .form-panel { padding: 32px 24px; justify-content: flex-start; padding-top: 40px; }
+      .login-header { padding: 12px 20px; }
+      .status-bar { gap: 12px; padding: 8px 16px; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="matrix-canvas"></canvas>
+  <div class="bg-grid"></div>
+  <div class="bg-radial"></div>
+  <div class="vignette"></div>
+
+  <div class="page-wrapper">
+
+    <!-- TOP HEADER -->
+    <header class="login-header">
+      <a href="/" class="brand-badge">
+        <svg class="hex-logo" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="30,4 54,16 54,44 30,56 6,44 6,16" stroke="#00E5FF" stroke-width="2" fill="rgba(0,229,255,0.05)"/>
+          <polygon points="30,10 48,19 48,41 30,50 12,41 12,19" stroke="#00FF88" stroke-width="1" fill="none" opacity="0.4"/>
+          <path d="M16 22 L24 22 L30 16" stroke="#00E5FF" stroke-width="1.5"/>
+          <circle cx="30" cy="16" r="2" fill="#00E5FF"/>
+          <path d="M44 38 L36 38 L30 44" stroke="#00E5FF" stroke-width="1.5"/>
+          <circle cx="30" cy="44" r="2" fill="#00E5FF"/>
+          <path d="M37 23 C34 19, 23 19, 21 28 C19 37, 32 40, 37 36" stroke="#00FF88" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-name">CYBER SHIELD</span>
+          <span class="brand-sub">SECURITY</span>
+        </div>
+      </a>
+
+      <div class="header-right">
+        <div class="header-status">
+          <div class="status-dot"></div>
+          <span>SECURITY STATUS: ONLINE</span>
+        </div>
+        <a href="/" class="header-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>RETURN TO BASE</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- MAIN TWO-COLUMN -->
+    <main class="login-main">
+
+      <!-- LEFT INFO PANEL -->
+      <section class="info-panel">
+        <div>
+          <h1 class="info-headline">
+            <span class="hl-cyan">CYBERNEXUS</span><br>
+            SECURITY<br>
+            <span class="hl-green">OPERATIONS CENTER</span>
+          </h1>
+          <p class="info-subtext" style="margin-top:14px">
+            Monitor your security posture. Detect threats in real-time.
+            Protect your infrastructure with advanced AI-driven threat intelligence.
+          </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-score">0%</span>
+            <div class="stat-label">Security Score</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value danger" id="stat-threats">00</span>
+            <div class="stat-label">Critical Threats</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value cyan" id="stat-assets">000</span>
+            <div class="stat-label">Protected Assets</div>
+          </div>
+        </div>
+
+        <!-- Terminal -->
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <span class="terminal-title"><i class="fa-solid fa-terminal"></i>&nbsp; LIVE TERMINAL</span>
+            <div class="terminal-controls">
+              <div class="t-dot red"></div>
+              <div class="t-dot amber"></div>
+              <div class="t-dot green"></div>
+            </div>
+          </div>
+          <div class="terminal-body" id="terminal-body"></div>
+        </div>
+
+        <!-- Features -->
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <span>Real-time threat monitoring &amp; automated quarantine</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon cyan"><i class="fa-solid fa-network-wired"></i></div>
+            <span>Live vulnerability scanning across 248+ assets</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <span>AI-powered security intelligence &amp; incident response</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT FORM PANEL -->
+      <aside class="form-panel">
+        <div class="login-card">
+          <div class="scan-line"></div>
+
+          <div class="card-logo-row">
+            <svg class="card-shield-icon" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="30,3 53,14 53,43 30,57 7,43 7,14" stroke="#00E5FF" stroke-width="2.5" fill="rgba(0,229,255,0.08)"/>
+              <path d="M37 21 C34 17, 22 17, 20 28 C18 38, 32 41, 37 37" stroke="#00FF88" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <h2 class="card-title">OPERATOR PORTAL</h2>
+          <p class="card-subtitle">CYBERNEXUS SOC // SECURE ACCESS</p>
+          <div class="card-divider"></div>
+
+          <div class="clearance-badge">
+            <i class="fa-solid fa-lock"></i>
+            AUTHORIZED PERSONNEL ONLY &mdash; CLEARANCE LEVEL 5
+          </div>
+
+          <!-- Alert -->
+          <div class="login-alert" id="login-alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="alert-text"></span>
+          </div>
+
+          <!-- Form -->
+          <form id="login-form" novalidate>
+
+            <div class="form-group">
+              <label class="form-label" for="operator-id">
+                <i class="fa-solid fa-user-shield"></i>
+                Operator ID
+              </label>
+              <div class="form-input-wrap">
+                <input
+                  type="text"
+                  id="operator-id"
+                  name="username"
+                  class="form-input"
+                  placeholder="Enter operator ID..."
+                  autocomplete="username"
+                  spellcheck="false"
+                >
+                <i class="fa-solid fa-user input-icon"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="security-key">
+                <i class="fa-solid fa-key"></i>
+                Security Key
+              </label>
+              <div class="form-input-wrap">
+                <input
+                  type="password"
+                  id="security-key"
+                  name="password"
+                  class="form-input"
+                  placeholder="Enter security key..."
+                  autocomplete="current-password"
+                >
+                <i class="fa-solid fa-eye input-icon" id="toggle-pw"></i>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <label class="custom-check" for="remember-check">
+                <input type="checkbox" id="remember-check" name="remember">
+                <div class="check-box"><i class="fa-solid fa-check"></i></div>
+                <span class="check-label">REMEMBER SESSION</span>
+              </label>
+              <a href="javascript:void(0)" class="forgot-link" id="forgot-link">RECOVER ACCESS</a>
+            </div>
+
+            <button type="submit" class="btn-login" id="login-btn">
+              <div class="spinner"></div>
+              <i class="fa-solid fa-lock-open btn-icon"></i>
+              <span>AUTHENTICATE &amp; ACCESS</span>
+            </button>
+
+          </form>
+
+          <!-- Session Info -->
+          <div class="session-card" id="session-card">
+            <div class="session-title">
+              <i class="fa-solid fa-check-circle"></i>&nbsp;ACCESS GRANTED
+            </div>
+            <div class="session-row">
+              <span class="key">OPERATOR</span>
+              <span class="val" id="sess-user">—</span>
+            </div>
+            <div class="session-row">
+              <span class="key">ROLE</span>
+              <span class="val cyan" id="sess-role">—</span>
+            </div>
+            <div class="session-row">
+              <span class="key">CLEARANCE</span>
+              <span class="val amber" id="sess-clearance">—</span>
+            </div>
+            <div class="session-row">
+              <span class="key">SHIELD NODES</span>
+              <span class="val" id="sess-nodes">—</span>
+            </div>
+            <div class="token-display" id="sess-token"></div>
+            <a href="/" class="btn-dashboard">
+              <i class="fa-solid fa-shield-halved"></i>
+              ENTER COMMAND CENTER
+            </a>
+          </div>
+
+          <div class="login-footer">
+            <span>&copy; 2024 CYBER SHIELD SECURITY</span>
+            &nbsp;|&nbsp;
+            <a href="javascript:void(0)">PRIVACY POLICY</a>
+            &nbsp;|&nbsp;
+            <a href="javascript:void(0)">TERMS</a>
+          </div>
+
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- BOTTOM STATUS BAR -->
+    <footer class="status-bar">
+      <div class="status-item"><div class="dot green"></div>CYBERNEXUS SECURITY ENGINE</div>
+      <div class="status-item"><div class="dot cyan"></div>NETWORK ONLINE</div>
+      <div class="status-item"><div class="dot green"></div>THREAT MONITOR ACTIVE</div>
+      <div class="status-item"><div class="dot cyan"></div>INTELLIGENCE FEED CONNECTED</div>
+      <div class="status-item"><div class="dot amber"></div><span id="status-time"></span></div>
+    </footer>
+
+  </div>
+
+  <script>
+    /* === MATRIX RAIN === */
+    (function() {
+      const canvas = document.getElementById('matrix-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+      const cols = Math.floor(window.innerWidth / 18);
+      const drops = Array.from({ length: cols }, () => Math.random() * -50);
+
+      function draw() {
+        ctx.fillStyle = 'rgba(3, 10, 18, 0.06)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00FF88';
+        ctx.font = '13px JetBrains Mono, monospace';
+        for (let i = 0; i < drops.length; i++) {
+          const ch = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(ch, i * 18, drops[i] * 18);
+          if (drops[i] * 18 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+          drops[i] += 0.4;
+        }
+      }
+      setInterval(draw, 55);
+    })();
+
+    /* === LIVE TERMINAL === */
+    const termLines = [
+      '<span class="term-dim">&gt;</span> Initializing CYBERNEXUS...',
+      '<span class="term-dim">&gt;</span> Security systems <span class="term-cyan">ONLINE</span>',
+      '<span class="term-dim">&gt;</span> Scanning vulnerabilities...',
+      '<span class="term-dim">&gt;</span> Monitoring network traffic...',
+      '<span class="term-dim">&gt;</span> Updating threat intelligence...',
+      '<span class="term-dim">&gt;</span> Cyber news feed <span class="term-cyan">SYNCED</span>',
+      '<span class="term-dim">&gt;</span> System status: <span class="term-cyan">SECURE</span>',
+      '<span class="term-dim">&gt;</span> Awaiting operator authentication...',
+      '<span class="term-dim">&gt;</span> <span class="term-danger">ALERT:</span> 3 new CVEs detected',
+      '<span class="term-dim">&gt;</span> Auto-patching shield nodes...',
+      '<span class="term-dim">&gt;</span> <span class="term-cyan">READY</span> for operator access'
+    ];
+
+    const termBody = document.getElementById('terminal-body');
+    let termIdx = 0;
+
+    function addTermLine() {
+      if (termBody.children.length >= 5) termBody.removeChild(termBody.firstChild);
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.innerHTML = termLines[termIdx % termLines.length];
+      termBody.appendChild(div);
+      termIdx++;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.style.opacity = '1';
+      div.style.animation = 'none';
+      div.innerHTML = termLines[i];
+      termBody.appendChild(div);
+      termIdx++;
+    }
+    setInterval(addTermLine, 2200);
+
+    /* === STATUS CLOCK === */
+    function updateClock() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('status-time').textContent =
+        `UTC ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* === STAT COUNTERS === */
+    function animateCount(el, target, fmt) {
+      const duration = 1400;
+      const startTime = performance.now();
+      function step(now) {
+        const p = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(ease * target);
+        el.textContent = fmt(val);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    window.addEventListener('load', () => {
+      animateCount(document.getElementById('stat-score'),   86,  v => v + '%');
+      animateCount(document.getElementById('stat-threats'), 4,   v => String(v).padStart(2, '0'));
+      animateCount(document.getElementById('stat-assets'),  248, v => String(v));
+    });
+
+    /* === PASSWORD TOGGLE === */
+    const togglePw = document.getElementById('toggle-pw');
+    const pwInput  = document.getElementById('security-key');
+
+    togglePw.addEventListener('click', () => {
+      const hidden = pwInput.type === 'password';
+      pwInput.type = hidden ? 'text' : 'password';
+      togglePw.classList.toggle('fa-eye', !hidden);
+      togglePw.classList.toggle('fa-eye-slash', hidden);
+    });
+
+    /* === ALERT HELPERS === */
+    function showAlert(type, msg) {
+      const el   = document.getElementById('login-alert');
+      const txt  = document.getElementById('alert-text');
+      const icon = el.querySelector('i');
+      el.className = 'login-alert show ' + type;
+      txt.textContent = msg;
+      icon.className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+    }
+
+    function hideAlert() {
+      document.getElementById('login-alert').className = 'login-alert';
+    }
+
+    /* === LOGIN FORM === */
+    const loginForm = document.getElementById('login-form');
+    const loginBtn  = document.getElementById('login-btn');
+
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const username = document.getElementById('operator-id').value.trim();
+      const password = document.getElementById('security-key').value.trim();
+
+      if (!username || !password) {
+        document.getElementById('operator-id').classList.toggle('error', !username);
+        document.getElementById('security-key').classList.toggle('error', !password);
+        showAlert('error', 'OPERATOR ID and SECURITY KEY are required to authenticate.');
+        return;
+      }
+
+      document.getElementById('operator-id').classList.remove('error');
+      document.getElementById('security-key').classList.remove('error');
+
+      loginBtn.classList.add('loading');
+      loginBtn.querySelector('span').textContent = 'AUTHENTICATING...';
+
+      try {
+        const resp = await fetch('/api/auth/portal-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          loginForm.style.display = 'none';
+          document.querySelector('.clearance-badge').style.display = 'none';
+
+          document.getElementById('sess-user').textContent      = data.user.username.toUpperCase();
+          document.getElementById('sess-role').textContent      = data.user.role;
+          document.getElementById('sess-clearance').textContent = data.user.clearance;
+          document.getElementById('sess-nodes').textContent     = data.user.activeShieldNodes + ' NODES ACTIVE';
+          document.getElementById('sess-token').textContent     = 'SESSION TOKEN: ' + data.sessionToken;
+          document.getElementById('session-card').classList.add('show');
+
+          showAlert('success', data.message);
+        } else {
+          showAlert('error', data.message || 'Authentication failed. Access denied.');
+        }
+      } catch (err) {
+        showAlert('error', 'CONNECTION ERROR: Unable to reach secure authentication endpoint.');
+      } finally {
+        loginBtn.classList.remove('loading');
+        loginBtn.querySelector('span').textContent = 'AUTHENTICATE & ACCESS';
+      }
+    });
+
+    /* === CLEAR ERROR ON INPUT === */
+    ['operator-id', 'security-key'].forEach(id => {
+      document.getElementById(id).addEventListener('input', function() {
+        this.classList.remove('error');
+        hideAlert();
+      });
+    });
+
+    /* === RECOVER LINK === */
+    document.getElementById('forgot-link').addEventListener('click', () => {
+      showAlert('error', 'RECOVERY PROTOCOL: Contact your Security Commander for emergency re-credential. Ref: CSS-RECOV-9001');
+    });
+  </script>
+
+</body>
+</html>
