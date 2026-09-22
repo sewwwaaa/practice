@@ -1,25 +1,37 @@
 {
-  "name": "aegis-cybersecurity-site",
+  "name": "zerolock-cybersecurity-soc",
   "version": "1.0.0",
-  "description": "Next-Gen Enterprise Cyber Security Services Platform",
+  "description": "ZEROLOCK Cyber Security Operations Center",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev:server": "node --watch server.js",
+    "build": "vite build",
+    "dev": "vite"
   },
   "keywords": [
     "cybersecurity",
-    "infosec",
-    "vapt",
+    "zerolock",
     "soc",
-    "pentesting",
-    "nodejs",
+    "vapt",
+    "react",
     "express"
   ],
-  "author": "Aegis Cyber Defense",
+  "author": "ZEROLOCK Cyber Security Operations Center",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.6"
   }
 }
+

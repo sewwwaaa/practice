@@ -1,6 +1,10 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cors from 'cors';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,319 +13,502 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory data store for audits & incidents
-const auditRequests = [];
-const portalSessions = [];
-const crisisDispatches = [];
+// Serve built React SPA assets from dist
+app.use(express.static(path.join(__dirname, 'dist')));
 
-// Cyber Shield Security Catalog
-const coreServices = [
-  {
-    id: 'pentest',
-    name: 'Penetration Testing',
-    icon: 'fa-arrow-right-arrow-left',
-    category: 'Offensive Security',
-    description: 'Black-box, grey-box, and white-box adversary simulation against web, API, mobile, and Active Directory environments.',
-    metrics: '99.4% Critical Vulnerability Discovery'
-  },
-  {
-    id: 'network-sec',
-    name: 'Network Security',
-    icon: 'fa-network-wired',
-    category: 'Infrastructure',
-    description: 'Next-generation firewall management, deep packet inspection, IDS/IPS tuning, and internal subnet micro-segmentation.',
-    metrics: 'Sub-millisecond Threat Scrubbing'
-  },
-  {
-    id: 'incident-response',
-    name: 'Incident Response',
-    icon: 'fa-shield-halved',
-    category: 'Crisis Defense',
-    description: 'Rapid containment, malware analysis, digital forensics, and emergency ransomware negotiation & remediation.',
-    metrics: '< 15 Min SLA Dispatch'
-  },
-  {
-    id: 'cloud-protection',
-    name: 'Cloud Protection',
-    icon: 'fa-cloud',
-    category: 'Cloud & Zero Trust',
-    description: 'Automated CSPM, Kubernetes container hardening, AWS/Azure/GCP IAM blast radius elimination.',
-    metrics: '100% Zero-Trust Compliance'
-  },
-  {
-    id: 'code-audits',
-    name: 'Code Audits',
-    icon: 'fa-code',
-    category: 'DevSecOps',
-    description: 'Static (SAST) and Dynamic (DAST) source code auditing, dependency chain scanning, and secret leak detection.',
-    metrics: 'OWASP & CWE Alignment'
-  }
+
+// --- Data Stores (In-Memory for SOC Engine) ---
+
+// 1. Initial Dashboard Summary Metrics
+let dashboardMetrics = {
+  securityScore: 86,
+  scoreChange: 5,
+  criticalVulnerabilities: 4,
+  vulnChange: -2,
+  activeThreats: 3,
+  threatsChange: 40,
+  protectedAssets: 248,
+  assetsChange: 12,
+  securityIncidents: 2,
+  incidentsChange: -50,
+  systemStatus: 'ONLINE'
+};
+
+// 2. Active Threats Stream
+let liveThreats = [
+  { id: 'TRT-8901', name: 'Suspicious Login', location: 'Tokyo Node', severity: 'Critical', time: '2 mins ago', ip: '185.220.101.5', status: 'ACTIVE' },
+  { id: 'TRT-8902', name: 'Malware Detection', location: 'Frankfurt DC', severity: 'High', time: '5 mins ago', ip: '194.165.118.42', status: 'QUARANTINED' },
+  { id: 'TRT-8903', name: 'Port Scan Probe', location: 'US-East AWS', severity: 'Medium', time: '12 mins ago', ip: '178.62.204.11', status: 'BLOCKED' },
+  { id: 'TRT-8904', name: 'Brute Force Attempt', location: 'London Gateway', severity: 'High', time: '18 mins ago', ip: '235.98.234.19', status: 'BLOCKED' },
+  { id: 'TRT-8905', name: 'Vulnerability Detected', location: 'Singapore Edge', severity: 'Low', time: '24 mins ago', ip: '153.183.55.6', status: 'LOGGED' }
 ];
 
-const allServices = [
-  { id: 'net-prot', title: 'NETWORK PROTECTION', icon: 'fa-crosshairs', desc: 'Perimeter firewalls, DDoS scrubbing & encrypted tunnels.' },
-  { id: 'infra-shield', title: 'INFRASTRUCTURE SHIELD', icon: 'fa-shield-virus', desc: 'Host hardening, kernel integrity checks & zero-trust gateways.' },
-  { id: 'cyber-def', title: 'CYBER DEFENSE', icon: 'fa-shield', desc: '24/7 SIEM monitoring, behavioral telemetry & automated quarantine.' },
-  { id: 'vuln-assess', title: 'VULNERABILITY ASSESSMENT', icon: 'fa-magnifying-glass', desc: 'Continuous automated and manual CVE surface inspection.' },
-  { id: 'sec-consulting', title: 'SECURITY CONSULTING', icon: 'fa-key', desc: 'CISO advisory, ISO 27001, SOC 2, and NIST framework compliance.' },
-  { id: 'crisis-resp', title: 'CRISIS RESPONSE', icon: 'fa-triangle-exclamation', desc: 'Immediate incident commander dispatch for active breach triage.' }
-];
-
-// Live Simulated Exploit Log Lines
-const exploitSnippets = [
-  '10.100.400.111 Exploit code - Memory buffer overrun detected on port 8080 (BLOCKED)',
-  '192.168.1.104 Exploit code - SQLi blind timing probe injected into /v1/auth (QUARANTINED)',
-  '172.16.42.89 Exploit code - Cobalt strike beacon probe blocked by IDS filter',
-  '10.0.12.55 Exploit code - Zero-day deserialization attempt on Spring cloud cluster (DROPPED)',
-  '185.220.101.5 Exploit code - TOR exit node brute-force on SSH port 22 (BANNED)'
-];
-
-// --- API Endpoints ---
-
-// 1. Live Threat Monitoring Telemetry
-app.get('/api/threat-monitoring', (req, res) => {
-  const baseIPs = [
-    '235.983.234',
-    '135.187.559',
-    '135.183.300',
-    '153.183.556',
-    '153.182.355',
-    '194.165.118',
-    '178.62.204'
-  ];
-
-  // Pick random active IPs
-  const activeIPs = baseIPs.slice(0, 5).map(ip => ({
-    ip: `IP: ${ip}`,
-    status: Math.random() > 0.3 ? 'INTERCEPTED' : 'ANALYZING',
-    threat: ['DDoS Cluster', 'RCE Probe', 'Credential Stuffing', 'C2 Beacon', 'Port Scan'][Math.floor(Math.random() * 5)],
-    latency: `${Math.floor(Math.random() * 30) + 5}ms`
-  }));
-
-  res.json({
-    success: true,
+// 3. Security Services
+let securityServices = [
+  {
+    id: 'vuln-assessment',
+    title: 'Vulnerability Assessment',
+    description: 'Scan applications, infrastructure & APIs for security vulnerabilities continuously.',
+    status: 'ACTIVE',
+    badge: 'ACTIVE',
+    badgeType: 'success',
+    progress: 78,
+    lastRun: '10 mins ago',
+    icon: 'ShieldCheck'
+  },
+  {
+    id: 'pen-testing',
+    title: 'Penetration Testing',
+    description: 'Identify exploitable weaknesses through authorized ethical hacking.',
+    status: 'SCHEDULED',
+    badge: 'SCHEDULED',
+    badgeType: 'warning',
+    nextRun: 'Apr 28, 2026 10:00 AM',
+    lastRun: '3 days ago',
+    icon: 'Terminal'
+  },
+  {
+    id: 'sec-monitoring',
+    title: 'Security Monitoring',
+    description: 'Continuously monitor security events and suspicious activities 24/7.',
     status: 'ONLINE',
-    liveAttacksCount: 1234 + Math.floor(Math.random() * 50),
-    activeIPs,
-    exploitStream: exploitSnippets[Math.floor(Math.random() * exploitSnippets.length)],
-    timestamp: new Date().toISOString()
-  });
-});
+    badge: 'ONLINE',
+    badgeType: 'success',
+    uptime: '99.9%',
+    lastRun: 'Live',
+    icon: 'Activity'
+  },
+  {
+    id: 'cloud-sec',
+    title: 'Cloud Security',
+    description: 'Monitor and protect Cloud workloads, configurations and SaaS environments.',
+    status: 'ONLINE',
+    badge: 'ONLINE',
+    badgeType: 'success',
+    compliance: '99%',
+    lastRun: 'Live',
+    icon: 'Cloud'
+  },
+  {
+    id: 'incident-resp',
+    title: 'Incident Response',
+    description: 'Detect, investigate and respond to security incidents in real time.',
+    status: 'READY',
+    badge: 'READY',
+    badgeType: 'primary',
+    responseTime: '< 15m',
+    lastRun: 'Standby',
+    icon: 'Zap'
+  },
+  {
+    id: 'compliance-audit',
+    title: 'Compliance & Security Audit',
+    description: 'Assess security controls against regulatory and industry requirements.',
+    status: 'IN_PROGRESS',
+    badge: '92% COMPLETE',
+    badgeType: 'info',
+    auditProgress: 92,
+    lastRun: '1 hour ago',
+    icon: 'FileCheck'
+  }
+];
 
-// 2. Services List
-app.get('/api/services', (req, res) => {
-  res.json({
-    success: true,
-    coreServices,
-    allServices
-  });
-});
+// 4. Vulnerabilities Database
+let vulnerabilities = [
+  { id: 'VULN-001', name: 'CVE-2025-4918 - Remote Code Execution', severity: 'Critical', asset: 'Web Server', status: 'Open', cvss: 9.8, cve: 'CVE-2025-4918' },
+  { id: 'VULN-002', name: 'SQL Injection in /api/v1/auth', severity: 'Critical', asset: 'API Gateway', status: 'Open', cvss: 9.1, cve: 'CVE-2026-1029' },
+  { id: 'VULN-003', name: 'XSS Flaw in Comment Input', severity: 'High', asset: 'Web Application', status: 'In Progress', cvss: 7.5, cve: 'CVE-2025-8831' },
+  { id: 'VULN-004', name: 'Outdated Node.js Package (lodash)', severity: 'Medium', asset: 'Backend API', status: 'Open', cvss: 5.3, cve: 'CVE-2024-3891' },
+  { id: 'VULN-005', name: 'Weak Encryption Algorithm (DES)', severity: 'Medium', asset: 'Database Engine', status: 'Open', cvss: 4.8, cve: 'CVE-2023-9901' },
+  { id: 'VULN-006', name: 'S3 Bucket Misconfiguration', severity: 'Low', asset: 'Cloud Storage', status: 'Resolved', cvss: 3.1, cve: 'CVE-2025-1102' },
+  { id: 'VULN-007', name: 'Missing HSTS Header', severity: 'Low', asset: 'Load Balancer', status: 'Resolved', cvss: 2.5, cve: 'CWE-693' }
+];
 
-// 3. Security Audit Computation & Submission
-app.post('/api/audit-request', (req, res) => {
-  const { companyName, email, industry, companySize, scope, cloudProviders } = req.body;
+// 5. Threat Intelligence & News
+let threatNews = [
+  {
+    id: 'NEWS-01',
+    title: 'VMware ESXi zero-day vulnerability (CVE-2025-22224) actively exploited in the wild',
+    summary: 'Nation-state actors are actively chaining heap overflow with auth bypass to gain root execution on hypervisors.',
+    source: 'The Hacker News',
+    time: '3 hours ago',
+    category: 'Vulnerabilities',
+    severity: 'Critical',
+    cve: 'CVE-2025-22224',
+    riskLevel: 'Critical (CVSS 9.8)'
+  },
+  {
+    id: 'NEWS-02',
+    title: 'Ransomware group targets healthcare organizations worldwide with new wiper payload',
+    summary: 'A sophisticated threat group has deployed a multi-threaded encryptor with hardcoded SMB lateral movement modules.',
+    source: 'BleepingComputer',
+    time: '4 hours ago',
+    category: 'Ransomware',
+    severity: 'High',
+    cve: 'RANSOM-2026-X',
+    riskLevel: 'High'
+  },
+  {
+    id: 'NEWS-03',
+    title: 'Google releases critical security update for Chrome browser patch',
+    summary: 'Emergency update addresses an in-the-wild zero-day memory corruption vulnerability in the V8 JavaScript engine.',
+    source: 'SecurityWeek',
+    time: '6 hours ago',
+    category: 'Vulnerabilities',
+    severity: 'Medium',
+    cve: 'CVE-2026-9011',
+    riskLevel: 'Medium'
+  },
+  {
+    id: 'NEWS-04',
+    title: 'AI models found vulnerable to indirect prompt injection in enterprise search systems',
+    summary: 'Security researchers demonstrate data exfiltration by embedding hidden instructions inside ingested PDF documents.',
+    source: 'Dark Reading',
+    time: '12 hours ago',
+    category: 'AI Security',
+    severity: 'Medium',
+    cve: 'AI-INJECT-01',
+    riskLevel: 'Medium'
+  }
+];
 
-  if (!companyName || !email) {
-    return res.status(400).json({
-      success: false,
-      message: 'Company name and email address are required.'
-    });
+// 6. Admin Users & Audit Logs
+let adminUsers = [
+  { id: 1, username: 'admin', email: 'admin@zerolock.io', organization: 'Global Cyber Command', role: 'Super Admin', status: 'Active', lastLogin: '2m ago' },
+  { id: 2, username: 'sarah.c', email: 'sarah@acme.corp', organization: 'Acme Corp', role: 'Security Analyst', status: 'Active', lastLogin: '1h ago' },
+  { id: 3, username: 'mike.t', email: 'mike@metasec.com', organization: 'MetaSec Systems', role: 'Client Admin', status: 'Active', lastLogin: '4h ago' },
+  { id: 4, username: 'lisa.r', email: 'lisa@techltd.io', organization: 'TechLtd', role: 'Client User', status: 'Active', lastLogin: '1d ago' },
+  { id: 5, username: 'david.k', email: 'david@nextgen.org', organization: 'NextGen Solutions', role: 'Security Manager', status: 'Disabled', lastLogin: '6d ago' }
+];
+
+let auditLogs = [
+  { id: 'LOG-991', user: 'admin', action: 'User Login', ip: '192.168.1.10', time: '14:32:01', status: 'Success' },
+  { id: 'LOG-990', user: 'admin', action: 'Rule Updated', ip: '192.168.1.10', time: '14:28:44', status: 'Success' },
+  { id: 'LOG-989', user: 'sarah.c', action: 'View Report', ip: '172.16.42.88', time: '14:15:10', status: 'Success' },
+  { id: 'LOG-988', user: 'system', action: 'Update Check', ip: '127.0.0.1', time: '14:00:00', status: 'Success' },
+  { id: 'LOG-987', user: 'unknown', action: 'Failed Auth', ip: '185.220.101.5', time: '13:58:22', status: 'Blocked' }
+];
+
+// --- API ENDPOINTS ---
+
+// 1. Auth Login Endpoint
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password required' });
   }
 
-  // Calculate Cyber Risk Score
-  let riskScore = 48;
-  if (industry === 'Finance' || industry === 'Crypto' || industry === 'Healthcare') riskScore += 24;
-  if (companySize === '500+') riskScore += 18;
-  if (Array.isArray(cloudProviders) && cloudProviders.length > 2) riskScore += 10;
-  riskScore = Math.min(98, Math.max(12, riskScore));
-
-  let threatPosture = riskScore > 75 ? 'Critical Risk' : (riskScore > 45 ? 'Elevated Exposure' : 'Low Risk');
-  let postureColor = riskScore > 75 ? '#FF0055' : (riskScore > 45 ? '#00E5FF' : '#00FF88');
-
-  const report = {
-    id: `CSS-AUD-${Date.now().toString(36).toUpperCase()}`,
-    companyName,
-    email,
-    riskScore,
-    threatPosture,
-    postureColor,
-    scope: scope || 'Full Infrastructure & Cloud VAPT',
-    estimatedVulnerabilities: Math.round(riskScore * 1.35),
-    recommendedSolutions: [
-      'Proactive Black-Box Penetration Testing & API Fuzzing',
-      '24/7 Automated Network & Endpoint Shield Monitoring',
-      'Cloud Zero-Trust Architecture & IAM Hardening',
-      'Continuous Threat Intel & Vulnerability Scanning'
-    ],
-    timestamp: new Date().toISOString()
-  };
-
-  auditRequests.push(report);
-
-  res.json({
-    success: true,
-    message: 'Security Audit Request processed successfully. Our Cyber Defense unit is compiling your report.',
-    report
+  // Audit log entry
+  auditLogs.unshift({
+    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+    user: email.split('@')[0] || 'Operator',
+    action: 'User Login',
+    ip: '192.168.1.100',
+    time: new Date().toLocaleTimeString(),
+    status: 'Success'
   });
-});
-
-// 4. Portal Login Simulator
-app.post('/api/auth/portal-login', (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: 'Operator ID and Security Key required.' });
-  }
-
-  const sessionToken = `CSS-AUTH-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-  portalSessions.push({ username, sessionToken, loggedInAt: new Date().toISOString() });
 
   res.json({
     success: true,
-    message: 'Access Granted: Encrypted Cyber Shield Command Terminal Activated.',
-    sessionToken,
+    token: `ZEROLOCK-JWT-${Date.now()}`,
     user: {
-      username,
-      role: 'CERTIFIED CYBER DEFENDER',
+      id: 1,
+      username: email.split('@')[0] || 'Admin',
+      email: email,
+      role: 'Certified Cyber Defender',
       clearance: 'LEVEL-5 TOP SECRET',
-      activeShieldNodes: 48,
-      defenseStatus: 'OPTIMAL'
+      status: 'AUTHENTICATED'
     }
   });
 });
 
-// 5. Emergency Crisis Response Dispatch
-app.post('/api/crisis-response', (req, res) => {
-  const { company, contactName, phone, email, breachType, notes } = req.body;
-
-  if (!contactName || !phone) {
-    return res.status(400).json({ success: false, message: 'Contact Name and Emergency Phone are required.' });
+// 2. Auth Register Endpoint
+app.post('/api/auth/register', (req, res) => {
+  const { fullName, email, organization, clearance, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
-  const dispatch = {
-    dispatchId: `CRISIS-${Date.now().toString(36).toUpperCase()}`,
-    company: company || 'Emergency Client',
-    contactName,
-    phone,
-    email: email || 'N/A',
-    breachType: breachType || 'Active Ransomware / APT Intrusion',
-    notes: notes || 'Immediate response requested',
-    dispatchedAt: new Date().toISOString(),
-    status: 'COMMANDER_DISPATCHED'
+  const newOperator = {
+    id: adminUsers.length + 1,
+    username: fullName || email.split('@')[0],
+    email: email,
+    organization: organization || 'Cyber Command',
+    role: 'Certified Operator',
+    status: 'Active',
+    lastLogin: 'Just now'
   };
 
-  crisisDispatches.push(dispatch);
+  adminUsers.unshift(newOperator);
+
+  auditLogs.unshift({
+    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+    user: newOperator.username,
+    action: 'Operator Registration',
+    ip: '192.168.1.100',
+    time: new Date().toLocaleTimeString(),
+    status: 'Success'
+  });
 
   res.json({
     success: true,
-    message: '🚨 EMERGENCY CRISIS TEAM DISPATCHED. Lead Incident Commander is calling your phone in < 10 minutes.',
-    dispatchId: dispatch.dispatchId,
-    eta: '< 10 Minutes'
+    message: 'Operator account registered successfully',
+    token: `ZEROLOCK-JWT-${Date.now()}`,
+    user: {
+      id: newOperator.id,
+      username: newOperator.username,
+      email: newOperator.email,
+      organization: newOperator.organization,
+      role: newOperator.role,
+      clearance: clearance || 'LEVEL-5 TOP SECRET',
+      status: 'AUTHENTICATED'
+    }
   });
 });
 
-// Cyber News & Intelligence Feed
-const cyberNews = [
-  {
-    id: 'NEWS-01',
-    title: 'Zero-Day RCE in Enterprise Cloud Edge Routers Actively Exploited',
-    category: 'Zero-Days',
-    severity: 'CRITICAL',
-    time: '12 mins ago',
-    source: 'Aegis Threat Lab',
-    summary: 'Nation-state APT actors are actively chaining an unauthenticated buffer overflow with memory tampering to bypass edge firewalls and achieve root execution.',
-    cve: 'CVE-2026-8912',
-    mitigation: 'Deploy virtual patching rule #99401 and restrict external administrative web interfaces.'
-  },
-  {
-    id: 'NEWS-02',
-    title: 'New Ransomware Variant "ShadowLock" Targeting Kubernetes API Endpoints',
-    category: 'Ransomware',
-    severity: 'CRITICAL',
-    time: '45 mins ago',
-    source: 'Global SOC Wire',
-    summary: 'Automated extortion bots are searching for open port 6443 clusters and injecting cryptojacking & volume encryption payloads into cluster pods.',
-    cve: 'CVE-2026-3401',
-    mitigation: 'Enforce RBAC mutual TLS and disable anonymous authentication on kube-apiserver.'
-  },
-  {
-    id: 'NEWS-03',
-    title: 'AI-Synthesized Voice Phishing Campaign Infiltrates Major Fintech Portals',
-    category: 'Breaches',
-    severity: 'HIGH',
-    time: '2 hours ago',
-    source: 'Cyber Defense Review',
-    summary: 'Attackers used real-time conversational deepfakes to impersonate C-level executives and approve fraudulent SWIFT fund re-routes.',
-    cve: 'SOCIAL-ENG-2026',
-    mitigation: 'Implement out-of-band cryptographic multi-party authorization for high-value transactions.'
-  },
-  {
-    id: 'NEWS-04',
-    title: 'Massive Multi-Vector DDoS Wave Peaks at 3.8 Tbps Against DNS Root Nodes',
-    category: 'DDoS',
-    severity: 'HIGH',
-    time: '4 hours ago',
-    source: 'Cloud Armor Feed',
-    summary: 'A botnet comprised of over 180,000 hijacked smart IoT cameras launched an amplified DNS/NTP reflection assault across North America.',
-    cve: 'BOTNET-RECON-99',
-    mitigation: 'Utilize BGP Anycast routing and automated Layer-7 rate-limiting scrubbing pipelines.'
-  },
-  {
-    id: 'NEWS-05',
-    title: 'CISA Issues Emergency Directive for Active Directory Kerberos Hardening',
-    category: 'Advisories',
-    severity: 'MEDIUM',
-    time: '6 hours ago',
-    source: 'US-CERT / CISA',
-    summary: 'Security bulletin warns of golden ticket forging vulnerabilities when domain controllers use legacy RC4-HMAC encryption keys.',
-    cve: 'CVE-2026-1180',
-    mitigation: 'Upgrade AD forests to AES-256-CTS-HMAC-SHA1-96 and enable PAC validation signatures.'
-  }
-];
 
-// 6. Cyber News Feed API
-app.get('/api/cyber-news', (req, res) => {
-  const { category } = req.query;
-  let filtered = cyberNews;
+// 2. Dashboard Metrics
+app.get('/api/dashboard/summary', (req, res) => {
+  res.json({
+    success: true,
+    metrics: dashboardMetrics,
+    threats: liveThreats,
+    vulnerabilitiesCount: {
+      total: vulnerabilities.length,
+      critical: vulnerabilities.filter(v => v.severity === 'Critical').length,
+      high: vulnerabilities.filter(v => v.severity === 'High').length,
+      medium: vulnerabilities.filter(v => v.severity === 'Medium').length,
+      low: vulnerabilities.filter(v => v.severity === 'Low').length
+    }
+  });
+});
+
+// 3. Security Services
+app.get('/api/services', (req, res) => {
+  res.json({
+    success: true,
+    services: securityServices,
+    summary: {
+      total: securityServices.length,
+      active: securityServices.filter(s => s.status === 'ACTIVE' || s.status === 'ONLINE').length,
+      scheduled: securityServices.filter(s => s.status === 'SCHEDULED').length,
+      ready: securityServices.filter(s => s.status === 'READY').length
+    }
+  });
+});
+
+app.post('/api/services/:id/trigger', (req, res) => {
+  const { id } = req.params;
+  const service = securityServices.find(s => s.id === id);
+  if (!service) {
+    return res.status(404).json({ success: false, message: 'Service not found' });
+  }
+
+  service.lastRun = 'Just now';
+  service.status = 'ACTIVE';
+  service.badge = 'ACTIVE';
+
+  res.json({
+    success: true,
+    message: `Service ${service.title} triggered successfully.`,
+    service
+  });
+});
+
+// 4. Vulnerability Scanner
+app.get('/api/vulnerabilities', (req, res) => {
+  res.json({
+    success: true,
+    vulnerabilities,
+    counts: {
+      total: vulnerabilities.length,
+      critical: vulnerabilities.filter(v => v.severity === 'Critical').length,
+      high: vulnerabilities.filter(v => v.severity === 'High').length,
+      medium: vulnerabilities.filter(v => v.severity === 'Medium').length,
+      low: vulnerabilities.filter(v => v.severity === 'Low').length
+    }
+  });
+});
+
+app.post('/api/vulnerabilities/scan', (req, res) => {
+  const { target, scanType } = req.body;
+  
+  // Add a newly discovered vulnerability dynamically
+  const newId = `VULN-00${vulnerabilities.length + 1}`;
+  const mockVuln = {
+    id: newId,
+    name: `Scan Output: Memory Heap Leak in ${target || 'Production Cloud'}`,
+    severity: 'High',
+    asset: target || 'All Assets',
+    status: 'Open',
+    cvss: 7.8,
+    cve: `CVE-2026-${Math.floor(1000 + Math.random() * 9000)}`
+  };
+
+  vulnerabilities.unshift(mockVuln);
+
+  res.json({
+    success: true,
+    message: `Vulnerability scan initiated on ${target || 'All Assets'} (${scanType || 'Full Scan'}).`,
+    newVulnerability: mockVuln
+  });
+});
+
+app.post('/api/vulnerabilities/:id/remediate', (req, res) => {
+  const { id } = req.params;
+  const item = vulnerabilities.find(v => v.id === id);
+  if (!item) {
+    return res.status(404).json({ success: false, message: 'Vulnerability not found' });
+  }
+
+  item.status = 'Resolved';
+  res.json({
+    success: true,
+    message: `Vulnerability ${id} marked as Resolved and patch verified.`,
+    vulnerability: item
+  });
+});
+
+// 5. Threat Intelligence & Cyber News
+app.get('/api/threat-intel', (req, res) => {
+  const { category, search } = req.query;
+  let filtered = threatNews;
+
   if (category && category !== 'All') {
-    filtered = cyberNews.filter(n => n.category.toLowerCase() === category.toLowerCase());
+    filtered = filtered.filter(n => n.category.toLowerCase() === category.toLowerCase());
   }
+
+  if (search) {
+    const q = search.toLowerCase();
+    filtered = filtered.filter(n => 
+      n.title.toLowerCase().includes(q) || 
+      n.summary.toLowerCase().includes(q) || 
+      (n.cve && n.cve.toLowerCase().includes(q))
+    );
+  }
+
   res.json({
     success: true,
-    count: filtered.length,
-    news: filtered
+    news: filtered,
+    stats: {
+      newCvesToday: 18,
+      criticalVulns: 4,
+      activeMalware: 14,
+      ransomwareCampaigns: 5,
+      securityAdvisories: 9
+    }
   });
 });
 
-// 7. General Contact
-app.post('/api/contact', (req, res) => {
-  const { name, email, service, message } = req.body;
+// 6. Root Admin Control Endpoints
+app.get('/api/admin/users', (req, res) => {
   res.json({
     success: true,
-    message: 'Transmission received. A Cyber Shield Security Specialist will reach out within 2 hours.',
-    ticketId: `TICK-${Date.now().toString(36).toUpperCase()}`
+    users: adminUsers,
+    metrics: {
+      totalUsers: 1284,
+      activeOrganizations: 86,
+      criticalThreats: 7,
+      securityIncidents: 12
+    }
   });
 });
 
-// Dedicated Login Page Route
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.post('/api/admin/users', (req, res) => {
+  const { username, email, organization, role } = req.body;
+  if (!username || !email) {
+    return res.status(400).json({ success: false, message: 'Username and email are required' });
+  }
+
+  const newUser = {
+    id: adminUsers.length + 1,
+    username,
+    email,
+    organization: organization || 'General Client',
+    role: role || 'Security Analyst',
+    status: 'Active',
+    lastLogin: 'Just now'
+  };
+
+  adminUsers.unshift(newUser);
+
+  // Add to audit logs
+  auditLogs.unshift({
+    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+    user: 'admin',
+    action: `Created User ${username}`,
+    ip: '192.168.1.10',
+    time: new Date().toLocaleTimeString(),
+    status: 'Success'
+  });
+
+  res.json({ success: true, message: 'User added successfully', user: newUser });
 });
 
-// Catch-all route to serve the SPA
+app.post('/api/admin/users/:id/toggle', (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const user = adminUsers.find(u => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  user.status = user.status === 'Active' ? 'Disabled' : 'Active';
+  res.json({ success: true, message: `User status changed to ${user.status}`, user });
+});
+
+app.get('/api/admin/audit-logs', (req, res) => {
+  res.json({ success: true, logs: auditLogs });
+});
+
+app.get('/api/admin/system-health', (req, res) => {
+  res.json({
+    success: true,
+    health: {
+      apiGateway: 'Operational',
+      databaseEngine: 'Operational',
+      securityMonitoring: 'Operational',
+      threatIntelFeed: 'Operational'
+    }
+  });
+});
+
+// Live Terminal Telemetry Snippet Stream
+app.get('/api/terminal/logs', (req, res) => {
+  const logPool = [
+    'Initializing ZEROLOCK SOC Engine v4.2.0...',
+    'Connecting to Threat Telemetry Node Tokyo-01 [ESTABLISHED]',
+    'Parsing incoming packet captures on interface eth0...',
+    'Zero-Day Vulnerability signature match: CVE-2025-22224 (BLOCKED)',
+    'SIEM Core: 142,890 events/sec processed without latency',
+    'Automated Firewall Rule #99401 applied to IP 185.220.101.5',
+    'Updating local CVE database cache... Done (0.04s)',
+    'Neural Anomaly Detector: Posture status OPTIMAL'
+  ];
+
+  const randomLog = logPool[Math.floor(Math.random() * logPool.length)];
+  res.json({
+    timestamp: new Date().toLocaleTimeString(),
+    log: randomLog
+  });
+});
+
+// Catch-all route to serve SPA index.html for non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
+    if (err) {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    }
+  });
 });
 
 // Start Server with Graceful Port Fallback
 function startServer(portToTry) {
   const server = app.listen(portToTry, () => {
     console.log(`=====================================================`);
-    console.log(`🛡️  CYBER SHIELD SECURITY COMMAND HUB IS LIVE`);
-    console.log(`🌐  Local URL: http://localhost:${portToTry}`);
-    console.log(`🔒  DEFENSE STATUS: ACTIVE // 100% SENSORS ARMED`);
+    console.log(`🛡️  ZEROLOCK CYBER SECURITY OPERATIONS CENTER API LIVE`);
+    console.log(`🌐  URL: http://localhost:${portToTry}`);
+    console.log(`🔒  DEFENSE POSTURE: ACTIVE // 100% SENSORS ARMED`);
     console.log(`=====================================================`);
   });
 
