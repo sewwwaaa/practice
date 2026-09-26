@@ -2,6 +2,24 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import User from './models/User.js';
+
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'zerolock-super-secret-key-12345';
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error('❌ [CONFIG ERROR] MONGO_URI is not defined in environment variables (.env)');
+} else {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ Connected to MongoDB successfully'))
+    .catch(err => console.error('❌ MongoDB connection error:', err));
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -174,13 +192,26 @@ let threatNews = [
 ];
 
 // 6. Admin Users & Audit Logs
-let adminUsers = [
-  { id: 1, username: 'admin', email: 'admin@zerolock.io', organization: 'Global Cyber Command', role: 'Super Admin', status: 'Active', lastLogin: '2m ago' },
-  { id: 2, username: 'sarah.c', email: 'sarah@acme.corp', organization: 'Acme Corp', role: 'Security Analyst', status: 'Active', lastLogin: '1h ago' },
-  { id: 3, username: 'mike.t', email: 'mike@metasec.com', organization: 'MetaSec Systems', role: 'Client Admin', status: 'Active', lastLogin: '4h ago' },
-  { id: 4, username: 'lisa.r', email: 'lisa@techltd.io', organization: 'TechLtd', role: 'Client User', status: 'Active', lastLogin: '1d ago' },
-  { id: 5, username: 'david.k', email: 'david@nextgen.org', organization: 'NextGen Solutions', role: 'Security Manager', status: 'Disabled', lastLogin: '6d ago' }
-];
+const defaultPasswordHash = bcrypt.hashSync('password123', 10);
+
+const seedDefaultUser = async () => {
+  try {
+    const adminExists = await User.findOne({ email: 'admin@zerolock.io' });
+    if (!adminExists) {
+      await User.create({
+        username: 'admin',
+        email: 'admin@zerolock.io',
+        password: defaultPasswordHash,
+        organization: 'Global Cyber Command',
+        role: 'Super Admin',
+      });
+      console.log('✅ Seeded default admin user');
+    }
+  } catch (err) {
+    console.error('Error seeding user:', err);
+  }
+};
+mongoose.connection.once('open', seedDefaultUser);
 
 let auditLogs = [
   { id: 'LOG-991', user: 'admin', action: 'User Login', ip: '192.168.1.10', time: '14:32:01', status: 'Success' },
@@ -193,78 +224,113 @@ let auditLogs = [
 // --- API ENDPOINTS ---
 
 // 1. Auth Login Endpoint
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password required' });
   }
 
-  // Audit log entry
-  auditLogs.unshift({
-    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-    user: email.split('@')[0] || 'Operator',
-    action: 'User Login',
-    ip: '192.168.1.100',
-    time: new Date().toLocaleTimeString(),
-    status: 'Success'
-  });
-
-  res.json({
-    success: true,
-    token: `ZEROLOCK-JWT-${Date.now()}`,
-    user: {
-      id: 1,
-      username: email.split('@')[0] || 'Admin',
-      email: email,
-      role: 'Certified Cyber Defender',
-      clearance: 'LEVEL-5 TOP SECRET',
-      status: 'AUTHENTICATED'
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-  });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Audit log entry
+    auditLogs.unshift({
+      id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+      user: user.username,
+      action: 'User Login',
+      ip: '192.168.1.100',
+      time: new Date().toLocaleTimeString(),
+      status: 'Success'
+    });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      token: token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        clearance: user.clearance,
+        status: 'AUTHENTICATED'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // 2. Auth Register Endpoint
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { fullName, email, organization, clearance, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
-  const newOperator = {
-    id: adminUsers.length + 1,
-    username: fullName || email.split('@')[0],
-    email: email,
-    organization: organization || 'Cyber Command',
-    role: 'Certified Operator',
-    status: 'Active',
-    lastLogin: 'Just now'
-  };
-
-  adminUsers.unshift(newOperator);
-
-  auditLogs.unshift({
-    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-    user: newOperator.username,
-    action: 'Operator Registration',
-    ip: '192.168.1.100',
-    time: new Date().toLocaleTimeString(),
-    status: 'Success'
-  });
-
-  res.json({
-    success: true,
-    message: 'Operator account registered successfully',
-    token: `ZEROLOCK-JWT-${Date.now()}`,
-    user: {
-      id: newOperator.id,
-      username: newOperator.username,
-      email: newOperator.email,
-      organization: newOperator.organization,
-      role: newOperator.role,
-      clearance: clearance || 'LEVEL-5 TOP SECRET',
-      status: 'AUTHENTICATED'
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
     }
-  });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newOperator = new User({
+      username: fullName || email.split('@')[0],
+      email: email,
+      password: hashedPassword,
+      organization: organization || 'Cyber Command',
+      clearance: clearance || 'LEVEL-5 TOP SECRET'
+    });
+
+    await newOperator.save();
+
+    auditLogs.unshift({
+      id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+      user: newOperator.username,
+      action: 'Operator Registration',
+      ip: '192.168.1.100',
+      time: new Date().toLocaleTimeString(),
+      status: 'Success'
+    });
+
+    const token = jwt.sign(
+      { id: newOperator._id, email: newOperator.email, role: newOperator.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Operator account registered successfully',
+      token: token,
+      user: {
+        id: newOperator._id,
+        username: newOperator.username,
+        email: newOperator.email,
+        organization: newOperator.organization,
+        role: newOperator.role,
+        clearance: newOperator.clearance,
+        status: 'AUTHENTICATED'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error during registration' });
+  }
 });
 
 
@@ -333,7 +399,7 @@ app.get('/api/vulnerabilities', (req, res) => {
 
 app.post('/api/vulnerabilities/scan', (req, res) => {
   const { target, scanType } = req.body;
-  
+
   // Add a newly discovered vulnerability dynamically
   const newId = `VULN-00${vulnerabilities.length + 1}`;
   const mockVuln = {
@@ -381,9 +447,9 @@ app.get('/api/threat-intel', (req, res) => {
 
   if (search) {
     const q = search.toLowerCase();
-    filtered = filtered.filter(n => 
-      n.title.toLowerCase().includes(q) || 
-      n.summary.toLowerCase().includes(q) || 
+    filtered = filtered.filter(n =>
+      n.title.toLowerCase().includes(q) ||
+      n.summary.toLowerCase().includes(q) ||
       (n.cve && n.cve.toLowerCase().includes(q))
     );
   }
@@ -402,59 +468,78 @@ app.get('/api/threat-intel', (req, res) => {
 });
 
 // 6. Root Admin Control Endpoints
-app.get('/api/admin/users', (req, res) => {
-  res.json({
-    success: true,
-    users: adminUsers,
-    metrics: {
-      totalUsers: 1284,
-      activeOrganizations: 86,
-      criticalThreats: 7,
-      securityIncidents: 12
-    }
-  });
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      users: users,
+      metrics: {
+        totalUsers: users.length,
+        activeOrganizations: 86,
+        criticalThreats: 7,
+        securityIncidents: 12
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
-app.post('/api/admin/users', (req, res) => {
+app.post('/api/admin/users', async (req, res) => {
   const { username, email, organization, role } = req.body;
   if (!username || !email) {
     return res.status(400).json({ success: false, message: 'Username and email are required' });
   }
 
-  const newUser = {
-    id: adminUsers.length + 1,
-    username,
-    email,
-    organization: organization || 'General Client',
-    role: role || 'Security Analyst',
-    status: 'Active',
-    lastLogin: 'Just now'
-  };
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    }
 
-  adminUsers.unshift(newUser);
+    const defaultPassword = await bcrypt.hash('password123', 10);
+    const newUser = new User({
+      username,
+      email,
+      password: defaultPassword,
+      organization: organization || 'General Client',
+      role: role || 'Security Analyst'
+    });
 
-  // Add to audit logs
-  auditLogs.unshift({
-    id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-    user: 'admin',
-    action: `Created User ${username}`,
-    ip: '192.168.1.10',
-    time: new Date().toLocaleTimeString(),
-    status: 'Success'
-  });
+    await newUser.save();
 
-  res.json({ success: true, message: 'User added successfully', user: newUser });
+    // Add to audit logs
+    auditLogs.unshift({
+      id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+      user: 'admin',
+      action: `Created User ${username}`,
+      ip: '192.168.1.10',
+      time: new Date().toLocaleTimeString(),
+      status: 'Success'
+    });
+
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+    res.json({ success: true, message: 'User added successfully', user: userResponse });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
-app.post('/api/admin/users/:id/toggle', (req, res) => {
-  const userId = parseInt(req.params.id, 10);
-  const user = adminUsers.find(u => u.id === userId);
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
-  }
+app.post('/api/admin/users/:id/toggle', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-  user.status = user.status === 'Active' ? 'Disabled' : 'Active';
-  res.json({ success: true, message: `User status changed to ${user.status}`, user });
+    user.status = user.status === 'Active' ? 'Disabled' : 'Active';
+    await user.save();
+    res.json({ success: true, message: `User status changed to ${user.status}`, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 app.get('/api/admin/audit-logs', (req, res) => {
