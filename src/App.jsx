@@ -16,24 +16,45 @@ import CyberCanvasBackground from './components/CyberCanvasBackground.jsx';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [currentUser, setCurrentUser] = useState({
-    username: 'Admin',
-    email: 'admin@zerolock.io',
-    role: 'System Administrator'
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      return localStorage.getItem('zerolock_auth') === 'true';
+    } catch {
+      return false;
+    }
   });
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('zerolock_user');
+      return saved ? JSON.parse(saved) : {
+        username: 'Admin',
+        email: 'admin@zerolock.io',
+        role: 'System Administrator'
+      };
+    } catch {
+      return {
+        username: 'Admin',
+        email: 'admin@zerolock.io',
+        role: 'System Administrator'
+      };
+    }
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (!isLoggedIn) {
     return (
-      <>
+      <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: 'var(--bg-void)' }}>
         <CyberCanvasBackground />
         <LoginView onLoginSuccess={(user) => {
+          try {
+            localStorage.setItem('zerolock_auth', 'true');
+            localStorage.setItem('zerolock_user', JSON.stringify(user));
+          } catch {}
           setCurrentUser(user);
           setIsLoggedIn(true);
           setCurrentView('dashboard');
         }} />
-      </>
+      </div>
     );
   }
 
@@ -125,7 +146,13 @@ export default function App() {
           <button
             className="nav-item"
             style={{ color: '#ff1744', marginTop: '8px' }}
-            onClick={() => setIsLoggedIn(false)}
+            onClick={() => {
+              try {
+                localStorage.removeItem('zerolock_auth');
+                localStorage.removeItem('zerolock_user');
+              } catch {}
+              setIsLoggedIn(false);
+            }}
           >
             <div className="nav-item-content">
               <LogOut size={15} />
