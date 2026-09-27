@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, RefreshCw } from 'lucide-react';
+import { ShieldCheck, RefreshCw } from 'lucide-react';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -12,12 +12,16 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ZeroLock SOC Error Caught by Boundary:', error, errorInfo);
+    console.error('[ZeroLock ErrorBoundary caught]:', error, errorInfo);
   }
 
-  handleReload = () => {
+  handleAutoRecover = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    window.location.href = '/';
   };
 
   render() {
@@ -40,45 +44,62 @@ export default class ErrorBoundary extends React.Component {
             width: '64px',
             height: '64px',
             borderRadius: '16px',
-            background: 'rgba(255, 23, 68, 0.1)',
-            border: '1px solid rgba(255, 23, 68, 0.3)',
+            background: 'rgba(0, 255, 213, 0.1)',
+            border: '1px solid rgba(0, 255, 213, 0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '20px',
-            boxShadow: '0 0 30px rgba(255, 23, 68, 0.2)'
+            boxShadow: '0 0 30px rgba(0, 255, 213, 0.15)'
           }}>
-            <ShieldAlert size={32} style={{ color: '#ff1744' }} />
+            <ShieldCheck size={32} style={{ color: '#00ffd5' }} />
           </div>
 
           <h2 style={{
-            fontSize: '24px',
+            fontSize: '22px',
             fontWeight: 700,
             letterSpacing: '2px',
             color: '#fff',
             marginBottom: '8px'
           }}>
-            SESSION DISPLAY RECOVERY
+            ZEROLOCK SOC SESSION RESET
           </h2>
 
           <p style={{
             color: '#5a6577',
-            fontSize: '14px',
+            fontSize: '13px',
             maxWidth: '420px',
             lineHeight: 1.6,
-            marginBottom: '24px'
+            marginBottom: '16px'
           }}>
-            A graphics or rendering disruption was detected. The system has prevented a black screen failure.
+            System state cleared. Click below to continue directly to the login portal.
           </p>
 
+          {this.state.error && (
+            <div style={{
+              background: 'rgba(255, 23, 68, 0.08)',
+              border: '1px solid rgba(255, 23, 68, 0.2)',
+              color: '#ff5252',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '11px',
+              padding: '10px 16px',
+              borderRadius: '8px',
+              maxWidth: '500px',
+              marginBottom: '20px',
+              wordBreak: 'break-word'
+            }}>
+              {this.state.error.message || String(this.state.error)}
+            </div>
+          )}
+
           <button
-            onClick={this.handleReload}
+            onClick={this.handleAutoRecover}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 213, 0.15), rgba(0, 255, 213, 0.05))',
-              border: '1px solid rgba(0, 255, 213, 0.3)',
+              background: 'linear-gradient(135deg, rgba(0, 255, 213, 0.2), rgba(0, 255, 213, 0.05))',
+              border: '1px solid rgba(0, 255, 213, 0.4)',
               color: '#00ffd5',
               padding: '12px 24px',
               borderRadius: '10px',
@@ -88,7 +109,7 @@ export default class ErrorBoundary extends React.Component {
               fontSize: '13px'
             }}
           >
-            <RefreshCw size={16} /> REBOOT SOC DISPLAY
+            <RefreshCw size={16} /> ENTER LOGIN PORTAL
           </button>
         </div>
       );

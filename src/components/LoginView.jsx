@@ -65,34 +65,6 @@ export default function LoginView({ onLoginSuccess }) {
     }
   }, [bootLines]);
 
-  // Keep screen awake while operator is on login view (prevents OS display sleep/black screen)
-  useEffect(() => {
-    let wakeLock = null;
-    const acquireWakeLock = async () => {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch {
-        // Silently ignore if not supported or restricted by policy
-      }
-    };
-    acquireWakeLock();
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        acquireWakeLock();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (wakeLock) {
-        wakeLock.release().catch(() => {});
-      }
-    };
-  }, []);
 
   const calculateStrength = (pass) => {
     let score = 0;

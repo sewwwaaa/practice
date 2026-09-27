@@ -15,10 +15,11 @@ export default function CyberCanvasBackground() {
     }
     if (!ctx) return;
 
-    let animationFrameId;
+    let animationFrameId = null;
+    let lastTime = performance.now();
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
-    let isTabVisible = !document.hidden;
+    let isTabVisible = true;
 
     const handleResize = () => {
       if (!canvas) return;
@@ -37,13 +38,12 @@ export default function CyberCanvasBackground() {
     window.addEventListener('resize', handleResize);
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // Particles configuration
-    const numParticles = 35;
+    const numParticles = 30;
     const particles = Array.from({ length: numParticles }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
       radius: Math.random() * 1.5 + 0.5,
       opacity: Math.random() * 0.4 + 0.2,
       color: Math.random() > 0.7 ? '0, 176, 255' : '0, 255, 213'
@@ -58,9 +58,7 @@ export default function CyberCanvasBackground() {
     };
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // Target ~30-40 FPS to prevent GPU memory/power throttle
-    let lastTime = performance.now();
-    const frameInterval = 1000 / 35;
+    const frameInterval = 1000 / 30; // 30 FPS cap
 
     const render = (now) => {
       if (!isTabVisible) {
@@ -70,14 +68,15 @@ export default function CyberCanvasBackground() {
 
       animationFrameId = requestAnimationFrame(render);
 
-      const delta = now - lastTime;
+      const currentTime = typeof now === 'number' ? now : performance.now();
+      const delta = currentTime - lastTime;
       if (delta < frameInterval) return;
-      lastTime = now - (delta % frameInterval);
+      lastTime = currentTime - (delta % frameInterval);
 
       try {
         ctx.clearRect(0, 0, width, height);
 
-        // Grid lines
+        // Grid
         ctx.strokeStyle = 'rgba(0, 255, 213, 0.015)';
         ctx.lineWidth = 0.5;
         const gridSize = 60;
@@ -94,35 +93,23 @@ export default function CyberCanvasBackground() {
           ctx.stroke();
         }
 
-        // Particle updates
+        // Particles
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           p.x += p.vx;
           p.y += p.vy;
 
-          // Safe bounce keeping particles inside viewport bounds
-          if (p.x <= 0) {
-            p.x = 0;
-            p.vx = Math.abs(p.vx);
-          } else if (p.x >= width) {
-            p.x = width;
-            p.vx = -Math.abs(p.vx);
-          }
+          if (p.x <= 0) { p.x = 0; p.vx = Math.abs(p.vx); }
+          else if (p.x >= width) { p.x = width; p.vx = -Math.abs(p.vx); }
 
-          if (p.y <= 0) {
-            p.y = 0;
-            p.vy = Math.abs(p.vy);
-          } else if (p.y >= height) {
-            p.y = height;
-            p.vy = -Math.abs(p.vy);
-          }
+          if (p.y <= 0) { p.y = 0; p.vy = Math.abs(p.vy); }
+          else if (p.y >= height) { p.y = height; p.vy = -Math.abs(p.vy); }
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${p.color}, ${p.opacity * 0.6})`;
           ctx.fill();
 
-          // Connect nearby particles
           for (let j = i + 1; j < particles.length; j++) {
             const p2 = particles[j];
             const dx = p.x - p2.x;
@@ -138,7 +125,6 @@ export default function CyberCanvasBackground() {
             }
           }
 
-          // Connect to mouse if active
           if (mouseX > 0 && mouseY > 0) {
             const mdx = p.x - mouseX;
             const mdy = p.y - mouseY;
@@ -153,8 +139,8 @@ export default function CyberCanvasBackground() {
             }
           }
         }
-      } catch (err) {
-        console.warn('Canvas render caught warning:', err);
+      } catch {
+        // Suppress canvas draw errors
       }
     };
 

@@ -43,18 +43,15 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', background: 'var(--bg-void)' }}>
-        <CyberCanvasBackground />
-        <LoginView onLoginSuccess={(user) => {
-          try {
-            localStorage.setItem('zerolock_auth', 'true');
-            localStorage.setItem('zerolock_user', JSON.stringify(user));
-          } catch {}
-          setCurrentUser(user);
-          setIsLoggedIn(true);
-          setCurrentView('dashboard');
-        }} />
-      </div>
+      <LoginView onLoginSuccess={(user) => {
+        try {
+          localStorage.setItem('zerolock_auth', 'true');
+          localStorage.setItem('zerolock_user', JSON.stringify(user));
+        } catch {}
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+        setCurrentView('dashboard');
+      }} />
     );
   }
 
