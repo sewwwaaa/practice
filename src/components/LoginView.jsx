@@ -47,11 +47,14 @@ export default function LoginView({ onLoginSuccess }) {
   ];
 
   useEffect(() => {
-    let i = 0;
+    let index = 0;
     const interval = setInterval(() => {
-      if (i < bootSequence.length) {
-        setBootLines(prev => [...prev, bootSequence[i]]);
-        i++;
+      if (index < bootSequence.length) {
+        const nextLine = bootSequence[index];
+        if (nextLine && nextLine.color) {
+          setBootLines(prev => [...prev, nextLine]);
+        }
+        index++;
       } else {
         clearInterval(interval);
       }
@@ -260,13 +263,13 @@ export default function LoginView({ onLoginSuccess }) {
             padding: '14px', maxHeight: '220px', overflowY: 'auto',
             fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.8
           }}>
-            {bootLines.map((line, i) => (
+            {bootLines && bootLines.filter(Boolean).map((line, i) => (
               <div key={i} style={{
-                color: line.color,
+                color: line?.color || 'var(--accent-cyan)',
                 opacity: 0,
                 animation: 'fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
               }}>
-                {line.text}
+                {line?.text || ''}
               </div>
             ))}
           </div>
