@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import User from './models/User.js';
+import { fetchGoogleCyberNews, calculateFeedStats } from './services/googleNews.js';
+
 
 dotenv.config();
 
@@ -436,35 +438,59 @@ app.post('/api/vulnerabilities/:id/remediate', (req, res) => {
   });
 });
 
-// 5. Threat Intelligence & Cyber News
-app.get('/api/threat-intel', (req, res) => {
-  const { category, search } = req.query;
-  let filtered = threatNews;
+// 5. Threat Intelligence & Daily Live Cyber News (Google News RSS Feed)
+app.get('/api/threat-intel', async (req, res) => {
+  const { category, search, refresh } = req.query;
+  try {
+    const liveArticles = await fetchGoogleCyberNews({
+      category: category || 'All',
+      search: search || '',
+      forceRefresh: refresh === 'true'
+    });
+    const stats = calculateFeedStats(liveArticles);
 
-  if (category && category !== 'All') {
-    filtered = filtered.filter(n => n.category.toLowerCase() === category.toLowerCase());
+    res.json({
+      success: true,
+      news: liveArticles,
+      stats: stats,
+      isLiveGoogleFeed: true,
+      lastSync: new Date().toLocaleTimeString()
+    });
+  } catch (err) {
+    console.error('Threat Intel API error:', err);
+    res.json({
+      success: true,
+      news: threatNews,
+      stats: {
+        newCvesToday: 18,
+        criticalVulns: 4,
+        activeMalware: 14,
+        ransomwareCampaigns: 5,
+        securityAdvisories: 9
+      },
+      isLiveGoogleFeed: false
+    });
   }
+});
 
-  if (search) {
-    const q = search.toLowerCase();
-    filtered = filtered.filter(n =>
-      n.title.toLowerCase().includes(q) ||
-      n.summary.toLowerCase().includes(q) ||
-      (n.cve && n.cve.toLowerCase().includes(q))
-    );
+// Live Cyber News Stream (fast ticker endpoint for Dashboard and Breach Map)
+app.get('/api/news/live', async (req, res) => {
+  try {
+    const liveArticles = await fetchGoogleCyberNews({
+      category: req.query.category || 'All',
+      search: req.query.search || '',
+      forceRefresh: req.query.refresh === 'true'
+    });
+    res.json({
+      success: true,
+      count: liveArticles.length,
+      news: liveArticles.slice(0, 8),
+      isLiveGoogleFeed: true,
+      syncedAt: new Date().toLocaleTimeString()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  res.json({
-    success: true,
-    news: filtered,
-    stats: {
-      newCvesToday: 18,
-      criticalVulns: 4,
-      activeMalware: 14,
-      ransomwareCampaigns: 5,
-      securityAdvisories: 9
-    }
-  });
 });
 
 // 6. Root Admin Control Endpoints

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Globe, Search, AlertTriangle, ShieldAlert, BookOpen, 
-  ExternalLink, Terminal, Tag, ShieldCheck, Flame
+  ExternalLink, Terminal, Tag, ShieldCheck, Flame, RotateCw
 } from 'lucide-react';
 
-export default function ThreatIntelView() {
+export default function ThreatIntelView({ onOpenBreachMap }) {
   const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isLiveGoogle, setIsLiveGoogle] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   const [stats, setStats] = useState({
     newCvesToday: 18,
     criticalVulns: 4,
@@ -18,31 +21,104 @@ export default function ThreatIntelView() {
 
   const categories = ['All', 'Vulnerabilities', 'Malware', 'Ransomware', 'Data Breaches', 'Network Security', 'AI Security'];
 
-  useEffect(() => {
+  const fetchThreatIntel = (forceRefresh = false) => {
+    setLoading(true);
     let url = `/api/threat-intel?category=${activeCategory}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+    if (forceRefresh) url += `&refresh=true`;
 
     fetch(url)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          setNews(data.news);
+          setNews(data.news || []);
           if (data.stats) setStats(data.stats);
+          setIsLiveGoogle(!!data.isLiveGoogleFeed);
+          setLastSyncTime(data.lastSync || new Date().toLocaleTimeString());
         }
       })
-      .catch(err => console.error('Threat Intel error:', err));
+      .catch(err => console.error('Threat Intel error:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchThreatIntel(false);
   }, [activeCategory, searchQuery]);
+
+  const featuredArticle = news.length > 0 ? news[0] : {
+    title: 'VMware ESXi zero-day vulnerability (CVE-2025-22224) actively exploited in the wild',
+    summary: 'Nation-state actors are actively chaining heap overflow with unauthenticated memory corruption to bypass hypervisor isolation.',
+    source: 'The Hacker News',
+    time: '3 hours ago',
+    cve: 'CVE-2025-22224',
+    riskLevel: 'Critical (CVSS 9.8)',
+    severity: 'Critical'
+  };
+
+  const remainingNews = news.length > 1 ? news.slice(1) : news;
 
   return (
     <div>
       {/* Header */}
-      <div className="page-header">
-        <h1 className="page-title">
-          <Globe style={{ color: '#00ffcc' }} /> THREAT INTELLIGENCE
-        </h1>
-        <p className="page-subtitle">
-          Stay informed about the latest threats, vulnerabilities, and security incidents worldwide.
-        </p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <h1 className="page-title" style={{ margin: 0 }}>
+              <Globe style={{ color: '#00ffcc' }} /> THREAT INTELLIGENCE
+            </h1>
+            {isLiveGoogle && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '11px',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                background: 'rgba(0, 255, 204, 0.1)',
+                border: '1px solid rgba(0, 255, 204, 0.3)',
+                color: '#00ffcc',
+                fontFamily: 'JetBrains Mono, monospace'
+              }}>
+                <span className="status-dot-green" style={{ width: '7px', height: '7px' }} />
+                GOOGLE 24H LIVE UPDATE {lastSyncTime && `• ${lastSyncTime}`}
+              </span>
+            )}
+          </div>
+          <p className="page-subtitle" style={{ marginTop: '6px' }}>
+            Live daily global intelligence stream powered by Google News real-time indexers & SOC telemetry.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            className="btn-cyber-outline"
+            onClick={() => fetchThreatIntel(true)}
+            disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px' }}
+            title="Fetch latest Google News updates"
+          >
+            <RotateCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <span>{loading ? 'SYNCING...' : 'SYNC FEED'}</span>
+          </button>
+          {onOpenBreachMap && (
+            <button 
+              className="btn-cyber" 
+              onClick={onOpenBreachMap}
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(255, 42, 85, 0.2), rgba(255, 42, 85, 0.05))',
+                border: '1px solid #ff2a55',
+                color: '#ff4d6d',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                boxShadow: '0 0 16px rgba(255, 42, 85, 0.25)'
+              }}
+            >
+              <Globe size={15} />
+              <span>OPEN "THE BREACH MAP"</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter Tags & Search Bar */}
@@ -71,7 +147,7 @@ export default function ThreatIntelView() {
             <Search size={14} style={{ color: '#00ffcc' }} />
             <input
               type="text"
-              placeholder="Search CVEs, threats..."
+              placeholder="Search CVEs, threats, breaches..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -84,53 +160,101 @@ export default function ThreatIntelView() {
         
         <div>
           {/* Featured Threat Alert Banner */}
-          <div className="card" style={{ marginBottom: '20px', borderLeft: '4px solid #ff0055', background: 'radial-gradient(circle at 10% 50%, rgba(255, 0, 85, 0.1) 0%, var(--bg-card) 100%)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff0055', fontSize: '11px', fontWeight: 700, fontFamily: 'Orbitron, sans-serif', marginBottom: '8px' }}>
-              <Flame size={16} /> THREAT ALERT // CRITICAL EXPLOIT
+          {featuredArticle && (
+            <div className="card" style={{ marginBottom: '20px', borderLeft: '4px solid #ff0055', background: 'radial-gradient(circle at 10% 50%, rgba(255, 0, 85, 0.1) 0%, var(--bg-card) 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff0055', fontSize: '11px', fontWeight: 700, fontFamily: 'Orbitron, sans-serif', marginBottom: '8px' }}>
+                <Flame size={16} /> THREAT ALERT // TOP BREAKING STORY
+              </div>
+
+              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '10px', lineHeight: 1.3 }}>
+                {featuredArticle.title}
+              </h2>
+
+              <p style={{ fontSize: '13px', color: '#8492a6', marginBottom: '16px', lineHeight: '1.6' }}>
+                {featuredArticle.summary}
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <span className={`badge badge-${(featuredArticle.severity || 'CRITICAL').toLowerCase()}`}>
+                  {featuredArticle.riskLevel || 'Risk Level: Critical'}
+                </span>
+                {featuredArticle.cve && (
+                  <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#00e5ff' }}>
+                    {featuredArticle.cve}
+                  </span>
+                )}
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  {featuredArticle.source} • {featuredArticle.time}
+                </span>
+                {featuredArticle.link && (
+                  <button 
+                    className="btn-cyber" 
+                    style={{ marginLeft: 'auto', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => window.open(featuredArticle.link, '_blank')}
+                  >
+                    Read Google Source <ExternalLink size={12} />
+                  </button>
+                )}
+              </div>
             </div>
-
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginBottom: '10px' }}>
-              VMware ESXi zero-day vulnerability (CVE-2025-22224) actively exploited in the wild
-            </h2>
-
-            <p style={{ fontSize: '13px', color: '#8492a6', marginBottom: '16px', lineHeight: '1.6' }}>
-              Nation-state actors are actively chaining heap overflow with unauthenticated memory corruption to bypass hypervisor isolation and gain root privileges across enterprise ESXi clusters.
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-              <span className="badge badge-critical">Risk Level: Critical</span>
-              <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', color: '#00e5ff' }}>CVSS 9.8</span>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>The Hacker News • 3 hours ago</span>
-              <button className="btn-cyber" style={{ marginLeft: 'auto', fontSize: '11px' }}>
-                Read Full Article <ExternalLink size={12} />
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* News List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="card-title">LATEST CYBER NEWS</div>
+            <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>LATEST CYBER NEWS ({remainingNews.length} ARTICLES)</span>
+              <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'JetBrains Mono, monospace' }}>
+                SOURCE: GOOGLE NEWS DAILY
+              </span>
+            </div>
 
-            {news.map(item => (
-              <div key={item.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <span className={`badge badge-${item.severity ? item.severity.toLowerCase() : 'medium'}`} style={{ marginRight: '8px' }}>
-                      {item.category}
-                    </span>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>{item.source} • {item.time}</span>
-                  </div>
-                  {item.cve && (
-                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#00ffcc', background: 'rgba(0,255,204,0.08)', padding: '2px 8px', borderRadius: '4px' }}>
-                      {item.cve}
-                    </span>
-                  )}
-                </div>
-
-                <h3 style={{ fontSize: '15px', color: '#fff', fontWeight: 700 }}>{item.title}</h3>
-                <p style={{ fontSize: '12.5px', color: '#8492a6', lineHeight: '1.5' }}>{item.summary}</p>
+            {loading ? (
+              <div className="card" style={{ textAlign: 'center', padding: '30px', color: '#00ffcc' }}>
+                <RotateCw size={24} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 10px' }} />
+                <div>Fetching live daily updates from Google News...</div>
               </div>
-            ))}
+            ) : remainingNews.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                No articles found matching this query today. Try clearing filters.
+              </div>
+            ) : (
+              remainingNews.map(item => (
+                <div 
+                  key={item.id} 
+                  className="card" 
+                  style={{ display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.2s', cursor: item.link ? 'pointer' : 'default' }}
+                  onClick={() => item.link && window.open(item.link, '_blank')}
+                  onMouseOver={e => e.currentTarget.style.borderColor = 'rgba(0, 255, 204, 0.4)'}
+                  onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border-dark)'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span className={`badge badge-${item.severity ? item.severity.toLowerCase() : 'medium'}`}>
+                        {item.category}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>{item.source} • {item.time}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {item.cve && (
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#00ffcc', background: 'rgba(0,255,204,0.08)', padding: '2px 8px', borderRadius: '4px' }}>
+                          {item.cve}
+                        </span>
+                      )}
+                      {item.link && (
+                        <ExternalLink size={13} style={{ color: '#64748b' }} />
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: '15px', color: '#fff', fontWeight: 700, lineHeight: 1.4, margin: 0 }}>
+                    {item.title}
+                  </h3>
+                  <p style={{ fontSize: '12.5px', color: '#8492a6', lineHeight: '1.5', margin: 0 }}>
+                    {item.summary}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -175,8 +299,8 @@ export default function ThreatIntelView() {
                   <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#00e5ff" strokeWidth="4" strokeDasharray="45, 100" strokeDashoffset="-55" />
                 </svg>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '24px', fontWeight: 800, color: '#fff' }}>42</span>
-                  <span style={{ fontSize: '10px', color: '#8492a6' }}>Total</span>
+                  <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '24px', fontWeight: 800, color: '#fff' }}>{news.length || 25}</span>
+                  <span style={{ fontSize: '10px', color: '#8492a6' }}>Active Items</span>
                 </div>
               </div>
             </div>

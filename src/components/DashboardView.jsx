@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, Skull, Crosshair, Server, AlertTriangle,
   ExternalLink, ArrowUpRight, ArrowDownRight, Activity, Radio,
-  TrendingUp, Eye, Zap, Globe
+  TrendingUp, Eye, Zap, Globe, RotateCw
 } from 'lucide-react';
 
 import ConstellationThreatMap from './ConstellationThreatMap.jsx';
@@ -11,12 +11,31 @@ import ThreatLevelGauge from './ThreatLevelGauge.jsx';
 export default function DashboardView({ onNavigate }) {
   const [data, setData] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
+  const [liveNews, setLiveNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsLastSync, setNewsLastSync] = useState(null);
+
+  const fetchLiveNews = (force = false) => {
+    setNewsLoading(true);
+    fetch(`/api/news/live${force ? '?refresh=true' : ''}`)
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && result.news && result.news.length > 0) {
+          setLiveNews(result.news);
+          setNewsLastSync(result.syncedAt || new Date().toLocaleTimeString());
+        }
+      })
+      .catch(err => console.error('Live news error:', err))
+      .finally(() => setNewsLoading(false));
+  };
 
   useEffect(() => {
     fetch('/api/dashboard/summary')
       .then(res => res.json())
       .then(resData => { if (resData.success) setData(resData); })
       .catch(() => {});
+
+    fetchLiveNews();
   }, []);
 
   const statsCards = [
@@ -242,44 +261,96 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
-        {/* Column 3: Live Cyber News */}
+        {/* Column 3: Live Cyber News (Google News Daily Live Feed) */}
         <div className="card animate-in animate-in-delay-4" style={{
           display: 'flex', flexDirection: 'column', gap: '10px',
           maxHeight: '600px', overflowY: 'auto'
         }}>
-          <div className="card-title">
-            <span>LIVE CYBER NEWS</span>
-            <Activity size={13} style={{ color: 'var(--accent-cyan)' }} />
+          <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="status-dot-green" style={{ boxShadow: '0 0 8px #00ffcc' }} />
+              <span>LIVE CYBER NEWS</span>
+              <span style={{
+                fontSize: '9px',
+                background: 'rgba(0, 255, 204, 0.12)',
+                color: '#00ffcc',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 600,
+                border: '1px solid rgba(0, 255, 204, 0.3)'
+              }}>
+                GOOGLE 24H
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchLiveNews(true);
+                }}
+                title="Refresh Google News Live Feed"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.color = '#00ffcc'}
+                onMouseOut={e => e.currentTarget.style.color = '#64748b'}
+              >
+                <RotateCw size={13} style={{ animation: newsLoading ? 'spin 1s linear infinite' : 'none' }} />
+              </button>
+              <Activity size={13} style={{ color: 'var(--accent-cyan)' }} />
+            </div>
           </div>
 
-          {newsCards.map((item, i) => (
-            <div key={item.id} style={{
+          {(liveNews.length > 0 ? liveNews : newsCards).map((item, i) => (
+            <div key={item.id || i} style={{
               background: 'rgba(4, 8, 16, 0.6)', padding: '14px',
               borderRadius: '10px', border: '1px solid var(--border-dim)',
               display: 'flex', flexDirection: 'column', gap: '8px',
-              transition: 'all 0.2s', cursor: 'pointer'
+              transition: 'all 0.2s', cursor: 'pointer',
+              position: 'relative'
             }}
               onMouseOver={e => {
-                e.currentTarget.style.borderColor = 'var(--border-default)';
-                e.currentTarget.style.background = 'rgba(8, 14, 26, 0.8)';
+                e.currentTarget.style.borderColor = 'rgba(0, 255, 204, 0.4)';
+                e.currentTarget.style.background = 'rgba(8, 14, 26, 0.85)';
               }}
               onMouseOut={e => {
                 e.currentTarget.style.borderColor = 'var(--border-dim)';
                 e.currentTarget.style.background = 'rgba(4, 8, 16, 0.6)';
               }}
-              onClick={() => onNavigate && onNavigate('threat-intel')}
+              onClick={() => {
+                if (item.link) {
+                  window.open(item.link, '_blank');
+                } else if (onNavigate) {
+                  onNavigate('news');
+                }
+              }}
             >
-              <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0', lineHeight: 1.4 }}>
-                {item.title}
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0', lineHeight: 1.4, flex: 1 }}>
+                  {item.title}
+                </h4>
+                {item.link && (
+                  <ExternalLink size={12} style={{ color: '#64748b', flexShrink: 0, marginTop: '2px' }} />
+                )}
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{
-                  fontSize: '10px', color: '#3d4a5c',
+                  fontSize: '10px', color: '#64748b',
                   fontFamily: 'var(--font-mono)'
                 }}>
                   {item.source} • {item.time}
                 </span>
-                <span className={`badge badge-${item.severity === 'CRITICAL' ? 'critical' : item.severity === 'HIGH' ? 'high' : 'medium'}`}>
+                <span className={`badge badge-${(item.severity || 'MEDIUM').toLowerCase()}`}>
                   {item.severity}
                 </span>
               </div>

@@ -13,6 +13,7 @@ import VulnerabilityScannerView from './components/VulnerabilityScannerView.jsx'
 import ThreatIntelView from './components/ThreatIntelView.jsx';
 import AdminPortalView from './components/AdminPortalView.jsx';
 import CyberCanvasBackground from './components/CyberCanvasBackground.jsx';
+import BreachMapView from './components/BreachMapView.jsx';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -55,6 +56,16 @@ export default function App() {
     );
   }
 
+  // Full-bleed destination website for Cyber News: "THE BREACH MAP"
+  if (currentView === 'news') {
+    return (
+      <BreachMapView
+        onReturnToSOC={() => setCurrentView('dashboard')}
+        currentUser={currentUser}
+      />
+    );
+  }
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard': return <DashboardView onNavigate={setCurrentView} />;
@@ -62,8 +73,8 @@ export default function App() {
       case 'monitoring':
       case 'pentest': return <SecurityServicesView />;
       case 'vuln': return <VulnerabilityScannerView />;
-      case 'threat-intel':
-      case 'news': return <ThreatIntelView />;
+      case 'threat-intel': return <ThreatIntelView onOpenBreachMap={() => setCurrentView('news')} />;
+      case 'news': return <BreachMapView onReturnToSOC={() => setCurrentView('dashboard')} currentUser={currentUser} />;
       case 'admin':
       case 'audit': return <AdminPortalView />;
       case 'login-demo': return <LoginView onLoginSuccess={() => setCurrentView('dashboard')} />;
