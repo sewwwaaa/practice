@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+      - master
+      - security
   pull_request:
     branches:
       - main
+      - master
+      - security
   workflow_dispatch:
 
 permissions:
@@ -38,6 +42,7 @@ jobs:
           node-version: "22"
 
       - name: SCA - npm audit
+        if: hashFiles('package.json') != ''
         run: |
           npm ci
           npm audit --audit-level=high
