@@ -1,0 +1,885 @@
+/* ==========================================================================
+   THE BREACH MAP — FULLY RESPONSIVE ULTRA-DARK CYBER INTELLIGENCE
+   Smooth 60 FPS, adaptable from 320px mobile to 4K Ultra-Wide
+   ========================================================================== */
+
+.breach-page-root {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  background-color: #070b13;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(20, 35, 60, 0.45) 0%, rgba(7, 11, 19, 0.98) 70%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  color: #c9d4e5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ─── TOP NAVBAR (RESPONSIVE) ─── */
+.breach-nav {
+  min-height: 58px;
+  background: rgba(10, 16, 28, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px clamp(12px, 3vw, 36px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breach-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.breach-logo-icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breach-logo-globe {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 24, 40, 0.8);
+  box-shadow: 0 0 10px rgba(255, 42, 85, 0.2);
+}
+
+.breach-logo-pin {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 13px;
+  height: 13px;
+  color: #ff2a55;
+  filter: drop-shadow(0 0 6px #ff2a55);
+  animation: pulsePin 2s infinite;
+}
+
+@keyframes pulsePin {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #ff2a55); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ff1744); }
+}
+
+.breach-logo-text {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  line-height: 1;
+}
+
+.breach-logo-prefix {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: #8c9cb3;
+  text-transform: uppercase;
+}
+
+.breach-logo-main {
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.breach-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.6vw, 22px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.breach-nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.breach-nav-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: clamp(10px, 0.95vw, 11.5px);
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  padding: 6px 4px;
+  position: relative;
+  white-space: nowrap;
+}
+
+.breach-nav-btn:hover {
+  color: #ffffff;
+}
+
+.breach-nav-btn.active {
+  color: #ff334b;
+}
+
+.breach-nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ff334b;
+  box-shadow: 0 0 8px #ff334b;
+}
+
+.breach-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.breach-btn-return-soc {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, rgba(0, 255, 213, 0.12), rgba(0, 255, 213, 0.04));
+  border: 1px solid rgba(0, 255, 213, 0.35);
+  color: #00ffd5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: clamp(9.5px, 0.9vw, 11px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(0, 255, 213, 0.15);
+  white-space: nowrap;
+}
+
+.breach-btn-return-soc:hover {
+  background: rgba(0, 255, 213, 0.2);
+  border-color: #00ffd5;
+  box-shadow: 0 0 20px rgba(0, 255, 213, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ─── MAIN CONTENT CONTAINER (FLUID RESPONSIVE) ─── */
+.breach-main-content {
+  flex: 1;
+  padding: clamp(14px, 2vw, 24px) clamp(12px, 3vw, 36px) 32px;
+  max-width: 1720px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ─── HEADER SECTION ─── */
+.breach-header-section {
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+
+.breach-eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.breach-eyebrow-left {
+  font-size: clamp(9px, 0.85vw, 10.5px);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #64748b;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breach-eyebrow-left::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #38bdf8;
+  border-radius: 1px;
+}
+
+.breach-eyebrow-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(9px, 0.85vw, 10.5px);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.breach-news-ticker-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff2a55;
+  box-shadow: 0 0 8px #ff2a55;
+  animation: blinkLive 1.2s infinite;
+}
+
+@keyframes blinkLive {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); }
+}
+
+.breach-hero-title {
+  font-size: clamp(18px, 2.2vw, 28px);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.breach-hero-subtitle {
+  font-size: clamp(11.5px, 1.1vw, 13.5px);
+  color: #8392a8;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+
+/* ─── DYNAMIC RESPONSIVE GRID ─── */
+/* Default Large Desktop Layout: 3 Columns */
+.breach-three-col-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 330px) 1fr minmax(240px, 280px);
+  gap: 20px;
+  align-items: start;
+  width: 100%;
+}
+
+/* Medium Screens (1024px to 1320px) -> Map takes priority, sidebars wrap neatly */
+@media (max-width: 1320px) and (min-width: 980px) {
+  .breach-three-col-grid {
+    grid-template-columns: 300px 1fr;
+    grid-template-areas: 
+      "map map"
+      "news feed";
+  }
+
+  .breach-center-column {
+    grid-area: map;
+  }
+  .breach-news-column {
+    grid-area: news;
+  }
+  .breach-feed-column {
+    grid-area: feed;
+  }
+}
+
+/* Mobile & Tablet (< 980px) -> Stacked in Priority Order */
+@media (max-width: 980px) {
+  .breach-three-col-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Center map appears at the very top for mobile/tablets */
+  .breach-center-column {
+    order: 1;
+    width: 100%;
+  }
+  .breach-news-column {
+    order: 2;
+    width: 100%;
+  }
+  .breach-feed-column {
+    order: 3;
+    width: 100%;
+  }
+}
+
+/* ─── NEWS COLUMN (LEFT) ─── */
+.breach-news-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.breach-mega-card {
+  position: relative;
+  height: clamp(200px, 22vw, 250px);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #0b111e;
+}
+
+.breach-mega-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 10px 32px rgba(56, 189, 248, 0.15), 0 0 20px rgba(0, 0, 0, 0.8);
+  transform: translateY(-2px);
+}
+
+.breach-card-bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.breach-mega-card:hover .breach-card-bg-img {
+  transform: scale(1.04);
+}
+
+.breach-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(6, 10, 18, 0.15) 0%, rgba(6, 10, 18, 0.65) 50%, rgba(5, 8, 15, 0.96) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(12px, 1.5vw, 18px);
+  box-sizing: border-box;
+}
+
+.breach-mega-title {
+  font-size: clamp(13px, 1.2vw, 15px);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.35;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.breach-card-meta {
+  font-size: clamp(9px, 0.85vw, 10.5px);
+  color: #8c9eb3;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Secondary News Sub-cards */
+.breach-sub-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .breach-sub-cards-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.breach-sub-card {
+  position: relative;
+  height: clamp(115px, 14vw, 138px);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #0b111e;
+}
+
+.breach-sub-card:hover {
+  border-color: rgba(255, 42, 85, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+}
+
+.breach-sub-card:hover .breach-card-bg-img {
+  transform: scale(1.05);
+}
+
+.breach-sub-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(6, 10, 18, 0.2) 0%, rgba(5, 8, 15, 0.7) 45%, rgba(4, 7, 13, 0.98) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.breach-sub-title {
+  font-size: clamp(9.5px, 0.9vw, 10.5px);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.breach-sub-meta {
+  font-size: 8.5px;
+  color: #8c9eb3;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+/* ─── CENTER COLUMN (MAP & STATS) ─── */
+.breach-center-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Map HUD Overlays (Responsive) */
+.breach-map-controls-hud {
+  position: absolute;
+  bottom: clamp(6px, 1.5vw, 12px);
+  right: clamp(8px, 1.5vw, 14px);
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.8vw, 8px);
+  z-index: 15;
+  flex-wrap: wrap;
+  max-width: 90%;
+  justify-content: flex-end;
+}
+
+.breach-hud-btn {
+  background: rgba(8, 14, 28, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: clamp(8.5px, 0.8vw, 10px);
+  font-weight: 700;
+  padding: 4px clamp(6px, 1vw, 10px);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.breach-hud-btn:hover {
+  background: rgba(18, 28, 48, 0.95);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.breach-map-filters-hud {
+  position: absolute;
+  top: clamp(6px, 1.5vw, 12px);
+  left: clamp(8px, 1.5vw, 14px);
+  display: flex;
+  align-items: center;
+  gap: clamp(3px, 0.6vw, 6px);
+  z-index: 15;
+  flex-wrap: wrap;
+  max-width: 85%;
+}
+
+.breach-hud-filter-btn {
+  background: rgba(8, 14, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8c9eb3;
+  font-size: clamp(8px, 0.8vw, 9.5px);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  padding: 3px clamp(5px, 0.8vw, 8px);
+  border-radius: 4px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.breach-hud-filter-btn.active {
+  background: rgba(255, 42, 85, 0.22);
+  border-color: #ff2a55;
+  color: #ff4d6d;
+}
+
+.breach-hud-attack-btn {
+  background: rgba(0, 255, 213, 0.12);
+  border: 1px solid rgba(0, 255, 213, 0.4);
+  color: #00ffd5;
+  font-size: clamp(8px, 0.8vw, 9.5px);
+  font-weight: 800;
+  padding: 3px clamp(6px, 1vw, 10px);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
+.breach-hud-attack-btn:hover {
+  background: rgba(0, 255, 213, 0.22);
+  box-shadow: 0 0 10px rgba(0, 255, 213, 0.3);
+}
+
+/* Telemetry Ticker Bar below Map */
+.breach-telemetry-ticker-bar {
+  background: rgba(6, 11, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px clamp(8px, 1.5vw, 14px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: clamp(9.5px, 0.9vw, 11px);
+  font-family: 'JetBrains Mono', monospace;
+  color: #94a3b8;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.breach-ticker-fps-badge {
+  color: #64748b;
+  font-size: 9.5px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .breach-ticker-fps-badge {
+    display: none;
+  }
+}
+
+/* Bottom Stats Ticker Bar (matching screenshot) */
+.breach-stats-bar {
+  background: rgba(11, 17, 30, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px clamp(12px, 2.5vw, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breach-stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(6px, 1.2vw, 12px);
+}
+
+.breach-stat-label {
+  font-size: clamp(9.5px, 0.9vw, 11px);
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #7a8ba3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.breach-stat-value {
+  font-family: 'JetBrains Mono', 'Orbitron', monospace;
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.breach-stat-value.red-glow {
+  color: #ff2a55;
+  text-shadow: 0 0 14px rgba(255, 42, 85, 0.65);
+}
+
+.breach-stat-value.white-value {
+  color: #ffffff;
+}
+
+.breach-stat-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.breach-stat-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 42, 85, 0.3);
+  box-shadow: 0 0 6px rgba(255, 42, 85, 0.2);
+}
+
+@media (max-width: 600px) {
+  .breach-stat-divider {
+    display: none;
+  }
+}
+
+/* ─── LIVE INCIDENT FEED (RIGHT) ─── */
+.breach-feed-column {
+  background: rgba(10, 16, 28, 0.92);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid #ff2a55;
+  box-shadow: -4px 0 20px rgba(255, 42, 85, 0.15), 0 8px 30px rgba(0, 0, 0, 0.6);
+  padding: clamp(12px, 1.5vw, 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.breach-feed-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(11px, 1vw, 12.5px);
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-transform: uppercase;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.breach-feed-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff2a55;
+  box-shadow: 0 0 10px #ff2a55;
+  animation: blinkLive 1.4s infinite;
+}
+
+.breach-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: clamp(280px, 45vh, 480px);
+  padding-right: 4px;
+}
+
+.breach-incident-card {
+  background: rgba(15, 24, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  padding: clamp(9px, 1.2vw, 12px) 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.breach-incident-card:hover {
+  background: rgba(22, 34, 58, 0.85);
+  border-color: rgba(255, 42, 85, 0.3);
+  transform: translateX(2px);
+}
+
+.breach-incident-card.critical {
+  border-left-color: #ff2a55;
+}
+
+.breach-incident-card.high {
+  border-left-color: #ff7849;
+}
+
+.breach-incident-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(9px, 0.85vw, 10.5px);
+}
+
+.breach-incident-time {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.breach-incident-badge {
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.breach-incident-badge.critical {
+  color: #ff2a55;
+  text-shadow: 0 0 8px rgba(255, 42, 85, 0.4);
+}
+
+.breach-incident-badge.high {
+  color: #ff7849;
+}
+
+.breach-incident-title {
+  font-size: clamp(11px, 0.95vw, 12px);
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.35;
+  letter-spacing: 0.3px;
+}
+
+/* ─── FOOTER ─── */
+.breach-footer {
+  margin-top: auto;
+  min-height: 52px;
+  background: rgba(7, 11, 19, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px clamp(12px, 3vw, 36px);
+  font-size: 10.5px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breach-footer-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 20px);
+  flex-wrap: wrap;
+}
+
+.breach-footer-link {
+  color: #8c9eb3;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.breach-footer-link:hover {
+  color: #ffffff;
+}
+
+.breach-footer-copy {
+  color: #475569;
+  letter-spacing: 1px;
+}
+
+/* ─── MODALS (RESPONSIVE) ─── */
+.breach-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(3, 6, 12, 0.88);
+  backdrop-filter: blur(12px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.breach-modal-card {
+  background: #0d1527;
+  border: 1px solid rgba(0, 255, 213, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 255, 213, 0.15);
+  border-radius: 12px;
+  max-width: min(94vw, 680px);
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: clamp(18px, 3vw, 28px);
+  position: relative;
+  box-sizing: border-box;
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.breach-modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.breach-modal-close-btn:hover {
+  background: rgba(255, 42, 85, 0.2);
+  color: #ff2a55;
+  border-color: #ff2a55;
+}
