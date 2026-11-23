@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, Building2, ShieldAlert, Activity, UserPlus, 
-  CheckCircle, XCircle, Shield, FileText, Server, Lock, RefreshCw, Key
+import {
+  Users, Building2, ShieldAlert, Activity, UserPlus,
+  FileText, Server, Lock, X, UserCog
 } from 'lucide-react';
+
+import { PageHeader } from './ui.jsx';
+
+const HEALTH_LABELS = [
+  ['apiGateway', 'API Gateway'],
+  ['databaseEngine', 'Database Engine'],
+  ['securityMonitoring', 'Security Monitoring'],
+  ['threatIntelFeed', 'Threat Intel Feed'],
+];
 
 export default function AdminPortalView() {
   const [users, setUsers] = useState([]);
@@ -10,7 +19,7 @@ export default function AdminPortalView() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [health, setHealth] = useState({ apiGateway: 'Operational', databaseEngine: 'Operational', securityMonitoring: 'Operational', threatIntelFeed: 'Operational' });
   const [showAddModal, setShowAddModal] = useState(false);
-  
+
   // New User Form State
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -25,24 +34,34 @@ export default function AdminPortalView() {
           setUsers(data.users);
           if (data.metrics) setMetrics(data.metrics);
         }
-      });
+      })
+      .catch(() => {});
 
     fetch('/api/admin/audit-logs')
       .then(res => res.json())
       .then(data => {
         if (data.success) setAuditLogs(data.logs);
-      });
+      })
+      .catch(() => {});
 
     fetch('/api/admin/system-health')
       .then(res => res.json())
       .then(data => {
         if (data.success) setHealth(data.health);
-      });
+      })
+      .catch(() => {});
   };
 
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  useEffect(() => {
+    if (!showAddModal) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setShowAddModal(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showAddModal]);
 
   const handleAddUser = (e) => {
     e.preventDefault();
@@ -66,7 +85,8 @@ export default function AdminPortalView() {
           setNewEmail('');
           fetchAdminData();
         }
-      });
+      })
+      .catch(() => {});
   };
 
   const handleToggleStatus = (id) => {
@@ -76,205 +96,189 @@ export default function AdminPortalView() {
         if (data.success) {
           fetchAdminData();
         }
-      });
+      })
+      .catch(() => {});
   };
 
+  const metricCards = [
+    { label: 'Total Users', value: metrics.totalUsers.toLocaleString(), icon: Users, color: '#00ffd5' },
+    { label: 'Active Organizations', value: metrics.activeOrganizations, icon: Building2, color: '#00e676' },
+    { label: 'Critical Threats', value: String(metrics.criticalThreats).padStart(2, '0'), icon: ShieldAlert, color: '#ff1744' },
+    { label: 'Security Incidents', value: metrics.securityIncidents, icon: Activity, color: '#ff9100' },
+  ];
+
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 className="page-title">
-            <Lock style={{ color: '#00ffcc' }} /> ROOT ADMIN CONTROL
-          </h1>
-          <p className="page-subtitle">
-            Manage users, permissions, organizations and system settings.
-          </p>
-        </div>
-        <button className="btn-cyber" onClick={() => setShowAddModal(true)}>
-          <UserPlus size={16} /> Add User
-        </button>
+    <div className="view-stack">
+      <PageHeader
+        eyebrow="Module 04 · Root Access"
+        icon={Lock}
+        title="ROOT ADMIN CONTROL"
+        subtitle="Manage users, permissions, organizations and system settings."
+        actions={(
+          <button className="btn-cyber" onClick={() => setShowAddModal(true)}>
+            <UserPlus size={15} /> Add User
+          </button>
+        )}
+      />
+
+      {/* Metrics */}
+      <div className="metrics-grid metric-grid-4 animate-in animate-in-delay-1">
+        {metricCards.map(card => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="metric-card" style={{ '--c': card.color }}>
+              <div className="metric-icon-wrap"><Icon size={20} /></div>
+              <div>
+                <div className="metric-value">{card.value}</div>
+                <div className="metric-label">{card.label}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Top 4 Metrics Header */}
-      <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}>
-        <div className="metric-card">
-          <div className="metric-icon-wrap">
-            <Users size={20} />
-          </div>
-          <div>
-            <div className="metric-value">{metrics.totalUsers.toLocaleString()}</div>
-            <div className="metric-label">Total Users</div>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-icon-wrap" style={{ color: '#00ff99', background: 'rgba(0, 255, 153, 0.08)' }}>
-            <Building2 size={20} />
-          </div>
-          <div>
-            <div className="metric-value">{metrics.activeOrganizations}</div>
-            <div className="metric-label">Active Organizations</div>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-icon-wrap" style={{ color: '#ff0055', background: 'rgba(255, 0, 85, 0.08)' }}>
-            <ShieldAlert size={20} />
-          </div>
-          <div>
-            <div className="metric-value" style={{ color: '#ff0055' }}>{String(metrics.criticalThreats).padStart(2, '0')}</div>
-            <div className="metric-label">Critical Threats</div>
-          </div>
-        </div>
-
-        <div className="metric-card">
-          <div className="metric-icon-wrap" style={{ color: '#ffaa00', background: 'rgba(255, 170, 0, 0.08)' }}>
-            <Activity size={20} />
-          </div>
-          <div>
-            <div className="metric-value" style={{ color: '#ffaa00' }}>{metrics.securityIncidents}</div>
-            <div className="metric-label">Security Incidents</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid: User Management Table (Left 2fr) + Roles & Audit Logs (Right 1fr) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr', gap: '20px' }}>
-        
-        {/* User Management Table */}
-        <div className="card">
+      <div className="grid-main-side animate-in animate-in-delay-2">
+        {/* Users */}
+        <section className="card">
           <div className="card-title">
-            <span>USER MANAGEMENT</span>
-            <span style={{ fontSize: '11px', color: '#8492a6' }}>Showing {users.length} Active Accounts</span>
+            <span className="card-title-left"><UserCog size={14} /> USER MANAGEMENT</span>
+            <span className="card-title-meta">{users.length} ACCOUNTS</span>
           </div>
 
-          <div className="table-responsive">
-            <table className="cyber-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Organization</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Last Login</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id}>
-                    <td>
-                      <div style={{ fontWeight: 600, color: '#fff' }}>{u.username}</div>
-                      <div style={{ fontSize: '11px', color: '#8492a6' }}>{u.email}</div>
-                    </td>
-                    <td>{u.organization}</td>
-                    <td>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: '#00e5ff' }}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${u.status === 'Active' ? 'badge-active' : 'badge-disabled'}`}>
-                        {u.status}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '12px', color: '#8492a6' }}>{u.lastLogin}</td>
-                    <td>
-                      <button 
-                        className="btn-cyber-outline" 
-                        style={{ fontSize: '11px', borderColor: u.status === 'Active' ? 'rgba(255,0,85,0.4)' : 'rgba(0,255,153,0.4)' }}
-                        onClick={() => handleToggleStatus(u.id)}
-                      >
-                        {u.status === 'Active' ? 'Disable' : 'Enable'}
-                      </button>
-                    </td>
+          {users.length === 0 ? (
+            <div className="empty-state">
+              <Users size={26} />
+              <strong style={{ color: 'var(--text-strong)' }}>No operator accounts loaded</strong>
+              <span>User records are served from MongoDB via the SOC API.</span>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="cyber-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Organization</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="user-cell">
+                          <span className="user-cell-avatar">{(u.username || '?').charAt(0).toUpperCase()}</span>
+                          <div>
+                            <strong>{u.username}</strong>
+                            <small>{u.email}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{u.organization}</td>
+                      <td><span className="mono" style={{ fontSize: '11.5px', color: '#4fd1ff' }}>{u.role}</span></td>
+                      <td>
+                        <span className={`badge ${u.status === 'Active' ? 'badge-active' : 'badge-disabled'}`}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="mono" style={{ fontSize: '11.5px' }}>{u.lastLogin}</td>
+                      <td>
+                        <button
+                          className={`btn-cyber-outline ${u.status === 'Active' ? 'is-danger' : 'is-success'}`}
+                          onClick={() => handleToggleStatus(u.id)}
+                        >
+                          {u.status === 'Active' ? 'Disable' : 'Enable'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
-        {/* Right Sidebar: System Health & Audit Logs */}
-        <div>
-          {/* System Health */}
-          <div className="card" style={{ marginBottom: '20px' }}>
+        {/* Sidebar */}
+        <aside className="stack">
+          <section className="card hud">
             <div className="card-title">
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Server size={16} style={{ color: '#00ffcc' }} /> SYSTEM HEALTH
-              </span>
+              <span className="card-title-left"><Server size={14} /> SYSTEM HEALTH</span>
+              <span className="status-pill">ALL SYSTEMS</span>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#8492a6' }}>API Gateway</span>
-                <span className="badge badge-active">{health.apiGateway}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#8492a6' }}>Database Engine</span>
-                <span className="badge badge-active">{health.databaseEngine}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#8492a6' }}>Security Monitoring</span>
-                <span className="badge badge-active">{health.securityMonitoring}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#8492a6' }}>Threat Intel Feed</span>
-                <span className="badge badge-active">{health.threatIntelFeed}</span>
-              </div>
+            <div className="stack-sm">
+              {HEALTH_LABELS.map(([key, label]) => (
+                <div key={key} className="kv-row">
+                  <span>{label}</span>
+                  <span className="badge badge-active">{health[key]}</span>
+                </div>
+              ))}
             </div>
-          </div>
+          </section>
 
-          {/* Audit Logs */}
-          <div className="card">
+          <section className="card">
             <div className="card-title">
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={16} style={{ color: '#00e5ff' }} /> AUDIT LOGS
-              </span>
+              <span className="card-title-left"><FileText size={14} /> AUDIT LOGS</span>
+              <span className="card-title-meta">{auditLogs.length} EVENTS</span>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+            <div className="stack-sm" style={{ maxHeight: '260px', overflowY: 'auto' }}>
+              {auditLogs.length === 0 && (
+                <div className="muted" style={{ fontSize: '12px', textAlign: 'center', padding: '14px 0' }}>No audit events yet.</div>
+              )}
               {auditLogs.map(log => (
-                <div key={log.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: '4px', fontSize: '11px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontWeight: 600 }}>
-                    <span>{log.user} - {log.action}</span>
-                    <span style={{ color: log.status === 'Success' ? '#00ff99' : '#ff0055' }}>{log.status}</span>
+                <div key={log.id} className="audit-item">
+                  <div className="audit-item-top">
+                    <span>{log.user} — {log.action}</span>
+                    <span style={{ color: log.status === 'Success' ? 'var(--status-success)' : '#ff4d6d' }}>{log.status}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', marginTop: '2px', fontFamily: 'JetBrains Mono, monospace' }}>
-                    <span>IP: {log.ip}</span>
+                  <div className="audit-item-bottom">
+                    <span>IP {log.ip}</span>
                     <span>{log.time}</span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
+          </section>
+        </aside>
       </div>
 
       {/* Add User Modal */}
       {showAddModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card" style={{ width: '420px', background: '#08101e' }}>
-            <div className="card-title" style={{ fontSize: '16px' }}>ADD NEW OPERATOR USER</div>
+        <div className="modal-backdrop" onClick={() => setShowAddModal(false)}>
+          <div
+            className="card hud modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-user-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="card-title">
+              <span className="card-title-left" id="add-user-title"><UserPlus size={14} /> ADD NEW OPERATOR</span>
+              <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={() => setShowAddModal(false)} aria-label="Close">
+                <X size={14} />
+              </button>
+            </div>
 
             <form onSubmit={handleAddUser}>
               <div className="login-form-group">
-                <label>Username</label>
+                <label htmlFor="new-username">Username</label>
                 <input
+                  id="new-username"
                   type="text"
                   className="login-input"
                   value={newUsername}
                   onChange={e => setNewUsername(e.target.value)}
                   placeholder="e.g. alex.m"
                   required
+                  autoFocus
                 />
               </div>
 
               <div className="login-form-group">
-                <label>Email Address</label>
+                <label htmlFor="new-email">Email Address</label>
                 <input
+                  id="new-email"
                   type="email"
                   className="login-input"
                   value={newEmail}
@@ -285,8 +289,9 @@ export default function AdminPortalView() {
               </div>
 
               <div className="login-form-group">
-                <label>Organization</label>
+                <label htmlFor="new-org">Organization</label>
                 <input
+                  id="new-org"
                   type="text"
                   className="login-input"
                   value={newOrg}
@@ -295,8 +300,9 @@ export default function AdminPortalView() {
               </div>
 
               <div className="login-form-group">
-                <label>Role</label>
+                <label htmlFor="new-role">Role</label>
                 <select
+                  id="new-role"
                   className="login-input"
                   value={newRole}
                   onChange={e => setNewRole(e.target.value)}
@@ -309,12 +315,12 @@ export default function AdminPortalView() {
                 </select>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                <button type="button" className="btn-cyber-outline" onClick={() => setShowAddModal(false)}>
+              <div className="modal-actions">
+                <button type="button" className="btn-ghost" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-cyber">
-                  Create User
+                  <UserPlus size={14} /> Create User
                 </button>
               </div>
             </form>

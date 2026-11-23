@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Shield, Gauge, ShieldCheck, Search, Terminal, Eye, Globe,
+  Gauge, ShieldCheck, Search, Terminal, Eye, Globe,
   Satellite, AlertTriangle, AlertCircle, Server, FileText,
-  Settings, Bell, ChevronDown, ChevronRight, LogOut, FileCheck,
-  Cpu, Activity
+  Settings, Bell, ChevronDown, LogOut, FileCheck,
+  Menu, PanelLeftClose, PanelLeftOpen, Clock
 } from 'lucide-react';
 
 import LoginView from './components/LoginView.jsx';
@@ -14,6 +14,59 @@ import ThreatIntelView from './components/ThreatIntelView.jsx';
 import AdminPortalView from './components/AdminPortalView.jsx';
 import CyberCanvasBackground from './components/CyberCanvasBackground.jsx';
 import BreachMapView from './components/BreachMapView.jsx';
+import ZeroLockLogo from './components/ZeroLockLogo.jsx';
+import { useClock } from './components/ui.jsx';
+
+const DEFAULT_USER = {
+  username: 'Admin',
+  email: 'admin@zerolock.io',
+  role: 'System Administrator'
+};
+
+const NAV_ITEMS = [
+  { section: 'Command Center' },
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge },
+  { id: 'services', label: 'Security Services', icon: ShieldCheck },
+  { id: 'vuln', label: 'Vulnerability Scanner', icon: Search },
+  { id: 'pentest', label: 'Penetration Testing', icon: Terminal },
+  { id: 'monitoring', label: 'Security Monitoring', icon: Eye },
+  { section: 'Intelligence' },
+  { id: 'threat-intel', label: 'Threat Intelligence', icon: Globe },
+  { id: 'news', label: 'Cyber News', icon: Satellite },
+  { section: 'Operations' },
+  { id: 'alerts', label: 'Security Alerts', icon: AlertTriangle, fallback: 'dashboard', badge: 3 },
+  { id: 'incidents', label: 'Incidents', icon: AlertCircle, fallback: 'dashboard', badge: 2, badgeTone: 'warn' },
+  { id: 'assets', label: 'Assets', icon: Server, fallback: 'admin' },
+  { section: 'Management' },
+  { id: 'reports', label: 'Reports', icon: FileCheck, fallback: 'admin' },
+  { id: 'audit', label: 'Audit Logs', icon: FileText },
+  { id: 'admin', label: 'Admin Portal', icon: Settings },
+];
+
+const VIEW_META = {
+  dashboard: { section: 'Command Center', title: 'Security Command Center' },
+  services: { section: 'Command Center', title: 'Security Services' },
+  vuln: { section: 'Command Center', title: 'Vulnerability Scanner' },
+  pentest: { section: 'Command Center', title: 'Penetration Testing' },
+  monitoring: { section: 'Command Center', title: 'Security Monitoring' },
+  'threat-intel': { section: 'Intelligence', title: 'Threat Intelligence' },
+  admin: { section: 'Management', title: 'Admin Portal' },
+  audit: { section: 'Management', title: 'Audit Logs' },
+};
+
+/** Isolated so the per-second tick only re-renders the clock, not the whole app. */
+function TopbarClock() {
+  const now = useClock();
+  const time = now.toLocaleTimeString('en-GB', { hour12: false });
+  const date = now.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+  return (
+    <div className="topbar-clock" title="Local SOC time">
+      <Clock size={14} style={{ color: 'var(--accent-cyan)' }} />
+      {time}
+      <small>{date}</small>
+    </div>
+  );
+}
 
 export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -27,20 +80,59 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('zerolock_user');
-      return saved ? JSON.parse(saved) : {
-        username: 'Admin',
-        email: 'admin@zerolock.io',
-        role: 'System Administrator'
-      };
+      return saved ? JSON.parse(saved) : DEFAULT_USER;
     } catch {
-      return {
-        username: 'Admin',
-        email: 'admin@zerolock.io',
-        role: 'System Administrator'
-      };
+      return DEFAULT_USER;
     }
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('zerolock_sidebar') === 'collapsed';
+    } catch {
+      return false;
+    }
+  });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const searchRef = useRef(null);
+
+  // Ctrl/⌘ + K focuses the global search; Escape closes the mobile drawer.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === 'Escape') setMobileNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const toggleSidebar = () => {
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+      setMobileNavOpen(open => !open);
+      return;
+    }
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem('zerolock_sidebar', next ? 'collapsed' : 'expanded'); } catch {}
+      return next;
+    });
+  };
+
+  const navigate = (view) => {
+    setCurrentView(view);
+    setMobileNavOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const signOut = () => {
+    try {
+      localStorage.removeItem('zerolock_auth');
+      localStorage.removeItem('zerolock_user');
+    } catch {}
+    setIsLoggedIn(false);
+  };
 
   if (!isLoggedIn) {
     return (
@@ -68,190 +160,143 @@ export default function App() {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'dashboard': return <DashboardView onNavigate={setCurrentView} />;
+      case 'dashboard': return <DashboardView onNavigate={navigate} currentUser={currentUser} />;
       case 'services':
       case 'monitoring':
       case 'pentest': return <SecurityServicesView />;
       case 'vuln': return <VulnerabilityScannerView />;
       case 'threat-intel': return <ThreatIntelView onOpenBreachMap={() => setCurrentView('news')} />;
-      case 'news': return <BreachMapView onReturnToSOC={() => setCurrentView('dashboard')} currentUser={currentUser} />;
       case 'admin':
       case 'audit': return <AdminPortalView />;
-      case 'login-demo': return <LoginView onLoginSuccess={() => setCurrentView('dashboard')} />;
-      default: return <DashboardView onNavigate={setCurrentView} />;
+      default: return <DashboardView onNavigate={navigate} currentUser={currentUser} />;
     }
   };
 
-  const navItems = [
-    { section: 'COMMAND CENTER' },
-    { id: 'dashboard', label: 'Dashboard', icon: Gauge },
-    { id: 'services', label: 'Security Services', icon: ShieldCheck },
-    { id: 'vuln', label: 'Vulnerability Scanner', icon: Search },
-    { id: 'pentest', label: 'Penetration Testing', icon: Terminal },
-    { id: 'monitoring', label: 'Security Monitoring', icon: Eye },
-    { section: 'INTELLIGENCE' },
-    { id: 'threat-intel', label: 'Threat Intelligence', icon: Globe },
-    { id: 'news', label: 'Cyber News', icon: Satellite },
-    { section: 'OPERATIONS' },
-    { id: 'alerts', label: 'Security Alerts', icon: AlertTriangle, fallback: 'dashboard' },
-    { id: 'incidents', label: 'Incidents', icon: AlertCircle, fallback: 'dashboard' },
-    { id: 'assets', label: 'Assets', icon: Server, fallback: 'admin' },
-    { section: 'MANAGEMENT' },
-    { id: 'reports', label: 'Reports', icon: FileCheck, fallback: 'admin' },
-    { id: 'audit', label: 'Audit Logs', icon: FileText },
-    { id: 'admin', label: 'Admin Portal', icon: Settings },
-  ];
-
-  const currentTime = new Date().toLocaleTimeString('en-US', {
-    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-  });
+  const meta = VIEW_META[currentView] || { section: 'Command Center', title: currentView };
+  const initial = currentUser.username?.charAt(0).toUpperCase() || 'A';
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${sidebarCollapsed ? 'is-collapsed' : ''} ${mobileNavOpen ? 'is-mobile-open' : ''}`}>
       <CyberCanvasBackground />
+      <div className="app-ambient" aria-hidden="true" />
 
-      {/* ─── LEFT SIDEBAR ─── */}
-      <aside className="app-sidebar">
+      {/* ─── SIDEBAR ─── */}
+      <aside className="app-sidebar" aria-label="Primary navigation">
         <div className="sidebar-brand">
-          <Shield className="brand-icon-svg" />
-          <div>
-            <div className="brand-title">ZEROLOCK</div>
-            <div className="brand-subtitle">Cyber Security SOC</div>
-          </div>
+          <ZeroLockLogo size={36} tagline="CYBER SECURITY SOC" />
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map((item, idx) => {
+          {NAV_ITEMS.map((item, idx) => {
             if (item.section) {
               return (
                 <div key={`section-${idx}`} className="nav-section-title">
-                  <ChevronRight size={10} />
-                  {item.section}
+                  <span>{item.section}</span>
                 </div>
               );
             }
 
             const Icon = item.icon;
-            const viewId = item.fallback || item.id;
             const isActive = currentView === item.id;
 
             return (
               <button
                 key={item.id}
                 className={`nav-item ${isActive ? 'active' : ''}`}
-                onClick={() => setCurrentView(viewId)}
+                onClick={() => navigate(item.fallback || item.id)}
+                title={sidebarCollapsed ? item.label : undefined}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <div className="nav-item-content">
-                  <Icon size={15} />
-                  <span>{item.label}</span>
-                </div>
+                <span className="nav-item-icon"><Icon size={16} /></span>
+                <span className="nav-item-label">{item.label}</span>
+                {item.badge && (
+                  <span className={`nav-item-badge ${item.badgeTone === 'warn' ? 'is-warn' : ''}`}>{item.badge}</span>
+                )}
               </button>
             );
           })}
-
-          <div style={{ flex: 1 }} />
-
-          <button
-            className="nav-item"
-            style={{ color: '#ff1744', marginTop: '8px' }}
-            onClick={() => {
-              try {
-                localStorage.removeItem('zerolock_auth');
-                localStorage.removeItem('zerolock_user');
-              } catch {}
-              setIsLoggedIn(false);
-            }}
-          >
-            <div className="nav-item-content">
-              <LogOut size={15} />
-              <span>Sign Out</span>
-            </div>
-          </button>
         </nav>
+
+        <div className="sidebar-footer">
+          <div className="sidebar-threat">
+            <div className="sidebar-threat-head">
+              <span>THREAT LEVEL</span>
+              <strong>ELEVATED</strong>
+            </div>
+            <div className="threat-segments">
+              {[0, 1, 2, 3, 4].map(i => (
+                <span key={i} style={i < 3 ? {
+                  background: i < 2 ? '#ffb74d' : 'var(--status-warning)',
+                  boxShadow: '0 0 8px rgba(255, 145, 0, 0.5)'
+                } : undefined} />
+              ))}
+            </div>
+          </div>
+
+          <button className="nav-item nav-item-danger" onClick={signOut} title={sidebarCollapsed ? 'Sign Out' : undefined}>
+            <span className="nav-item-icon"><LogOut size={16} /></span>
+            <span className="nav-item-label">Sign Out</span>
+          </button>
+        </div>
       </aside>
 
-      {/* ─── MAIN CONTENT ─── */}
+      <div className="sidebar-backdrop" onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+
+      {/* ─── MAIN ─── */}
       <div className="app-main-wrapper">
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              className="icon-btn"
+              onClick={toggleSidebar}
+              aria-label="Toggle navigation"
+            >
+              <Menu size={17} className="only-mobile" />
+              {sidebarCollapsed
+                ? <PanelLeftOpen size={17} className="only-desktop" />
+                : <PanelLeftClose size={17} className="only-desktop" />}
+            </button>
 
-        {/* Top Header Bar */}
-        <div className="app-header-title-bar">
-          <div className="header-top-brand">
-            <Shield size={24} style={{ color: 'var(--accent-cyan)', filter: 'drop-shadow(0 0 8px rgba(0, 255, 213, 0.4))' }} />
-            <h1 className="header-brand-title">ZEROLOCK</h1>
-            <span style={{ color: 'rgba(0, 255, 213, 0.3)', fontSize: '18px', fontWeight: 200 }}>|</span>
-            <span className="header-subtitle-tag">CYBER SECURITY OPERATIONS CENTER</span>
-          </div>
-        </div>
-
-        {/* Control Sub-Header */}
-        <header className="app-header-controls">
-          <div className="header-breadcrumbs">
-            <span style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>ZEROLOCK</span>
-            {' '}<span style={{ color: '#2d3748' }}>//</span>{' '}
-            <span style={{ textTransform: 'uppercase' }}>
-              {currentView === 'dashboard' ? 'command center' :
-               currentView === 'services' ? 'security services' :
-               currentView === 'vuln' ? 'vulnerability scanner' :
-               currentView === 'threat-intel' ? 'threat intelligence' :
-               currentView === 'admin' ? 'admin portal' : currentView}
-            </span>
+            <div className="topbar-crumbs">
+              <div className="header-breadcrumbs">
+                <span className="crumb-root">ZEROLOCK</span>
+                <span className="crumb-sep">/</span>
+                <span>{meta.section}</span>
+              </div>
+              <div className="topbar-title">{meta.title}</div>
+            </div>
           </div>
 
-          <div className="header-actions">
-            <div className="header-search">
-              <input type="text" placeholder="Search systems..." />
-              <Search size={13} style={{ color: '#3d4a5c' }} />
-            </div>
+          <div className="topbar-right">
+            <label className="header-search">
+              <Search size={14} />
+              <input ref={searchRef} type="text" placeholder="Search systems, CVEs, assets..." />
+              <span className="kbd">Ctrl K</span>
+            </label>
 
-            <div style={{ position: 'relative', cursor: 'pointer' }}>
-              <Bell size={17} style={{ color: '#5a6577' }} />
-              <span style={{
-                position: 'absolute', top: '-5px', right: '-5px',
-                background: 'var(--status-danger)', color: '#fff',
-                fontSize: '8px', fontWeight: 800,
-                width: '14px', height: '14px', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 8px rgba(255, 23, 68, 0.4)'
-              }}>3</span>
-            </div>
+            <TopbarClock />
 
             <div className="status-badge-header">
               <span className="status-dot-green" />
               SYSTEM ONLINE
             </div>
 
-            <div
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                cursor: 'pointer', padding: '4px 8px', borderRadius: '8px',
-                transition: 'background 0.2s'
-              }}
-              onClick={() => setCurrentView('admin')}
-            >
-              <div style={{
-                width: '30px', height: '30px', borderRadius: '8px',
-                background: 'linear-gradient(135deg, rgba(0, 255, 213, 0.15), rgba(0, 255, 213, 0.05))',
-                border: '1px solid rgba(0, 255, 213, 0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--accent-cyan)', fontSize: '12px', fontWeight: 700,
-                fontFamily: 'var(--font-display)'
-              }}>
-                {currentUser.username?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#e2e8f0', lineHeight: 1.2 }}>
-                  {currentUser.username || 'Admin'}
-                </div>
-                <div style={{ fontSize: '9px', color: '#5a6577', fontFamily: 'var(--font-mono)' }}>
-                  {currentUser.role || 'Administrator'}
-                </div>
-              </div>
-              <ChevronDown size={13} style={{ color: '#3d4a5c' }} />
-            </div>
+            <button className="icon-btn" aria-label="Notifications (3 unread)" onClick={() => navigate('dashboard')}>
+              <Bell size={17} />
+              <span className="icon-btn-badge">3</span>
+            </button>
+
+            <button className="user-chip" onClick={() => navigate('admin')} aria-label="Open admin portal">
+              <span className="user-avatar">{initial}</span>
+              <span className="user-meta">
+                <strong>{currentUser.username || 'Admin'}</strong>
+                <small>{currentUser.role || 'Administrator'}</small>
+              </span>
+              <ChevronDown size={14} />
+            </button>
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="page-content" key={currentView}>
           {renderCurrentView()}
         </main>

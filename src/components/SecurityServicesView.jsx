@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, Terminal, Eye, Cloud, Zap, FileCheck,
-  CheckCircle, Clock, Activity, PlayCircle
+  CheckCircle, Clock, Activity, PlayCircle, ShieldAlert, ServerOff
 } from 'lucide-react';
+
+import { PageHeader, RadialGauge } from './ui.jsx';
+
+const SERVICE_ICONS = {
+  'vuln-assessment': { icon: ShieldCheck, color: '#00ffd5' },
+  'pen-testing': { icon: Terminal, color: '#ff9100' },
+  'sec-monitoring': { icon: Eye, color: '#00b0ff' },
+  'cloud-sec': { icon: Cloud, color: '#00e676' },
+  'incident-resp': { icon: Zap, color: '#ff1744' },
+  'compliance-audit': { icon: FileCheck, color: '#a855f7' },
+};
+
+const RECENT_ACTIVITY = [
+  { text: 'Vulnerability scan completed', time: '2 min ago', icon: CheckCircle, color: '#00e676' },
+  { text: 'Suspicious login attempt blocked', time: '12 min ago', icon: ShieldAlert, color: '#00b0ff' },
+  { text: 'Malware detected and quarantined', time: '29 min ago', icon: ShieldAlert, color: '#ff1744' },
+];
+
+const statusBadgeClass = (status) =>
+  status === 'ACTIVE' || status === 'ONLINE' ? 'badge-active'
+    : status === 'SCHEDULED' ? 'badge-high'
+      : 'badge-medium';
 
 export default function SecurityServicesView() {
   const [services, setServices] = useState([]);
@@ -27,52 +49,35 @@ export default function SecurityServicesView() {
       .catch(() => setTriggeringId(null));
   };
 
-  const getServiceIcon = (id) => {
-    const iconMap = {
-      'vuln-assessment': { icon: ShieldCheck, color: 'var(--accent-cyan)' },
-      'pen-testing': { icon: Terminal, color: '#ff9100' },
-      'sec-monitoring': { icon: Eye, color: '#00b0ff' },
-      'cloud-sec': { icon: Cloud, color: '#00e676' },
-      'incident-resp': { icon: Zap, color: '#ff1744' },
-      'compliance-audit': { icon: FileCheck, color: '#a855f7' },
-    };
-    return iconMap[id] || { icon: ShieldCheck, color: 'var(--accent-cyan)' };
-  };
-
   const activeCount = services.filter(s => s.status === 'ACTIVE' || s.status === 'ONLINE').length;
   const scheduledCount = services.filter(s => s.status === 'SCHEDULED').length;
   const readyCount = services.filter(s => s.status === 'READY' || s.status === 'IN_PROGRESS').length;
 
   const summaryCards = [
-    { label: 'Total Services', value: services.length || 6, icon: Activity, color: 'var(--accent-cyan)', bg: 'rgba(0, 255, 213, 0.06)' },
-    { label: 'Active Services', value: activeCount || 4, icon: CheckCircle, color: '#00e676', bg: 'rgba(0, 230, 118, 0.06)' },
-    { label: 'Scheduled', value: scheduledCount || 1, icon: Clock, color: '#ff9100', bg: 'rgba(255, 145, 0, 0.06)' },
-    { label: 'Ready / Standby', value: readyCount || 1, icon: Zap, color: '#00b0ff', bg: 'rgba(0, 176, 255, 0.06)' },
+    { label: 'Total Services', value: services.length || 6, icon: Activity, color: '#00ffd5' },
+    { label: 'Active Services', value: activeCount || 4, icon: CheckCircle, color: '#00e676' },
+    { label: 'Scheduled', value: scheduledCount || 1, icon: Clock, color: '#ff9100' },
+    { label: 'Ready / Standby', value: readyCount || 1, icon: Zap, color: '#00b0ff' },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Header */}
-      <div className="page-header animate-in">
-        <h1 className="page-title">
-          <ShieldCheck style={{ color: 'var(--accent-cyan)' }} /> SECURITY SERVICES
-        </h1>
-        <p className="page-subtitle">
-          Comprehensive security services to protect your digital assets and infrastructure.
-        </p>
-      </div>
+    <div className="view-stack">
+      <PageHeader
+        eyebrow="Module 01 · Managed Defense"
+        icon={ShieldCheck}
+        title="SECURITY SERVICES"
+        subtitle="Comprehensive security services to protect your digital assets and infrastructure."
+      />
 
-      {/* Summary Cards */}
-      <div className="metrics-grid animate-in animate-in-delay-1" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        {summaryCards.map((card, i) => {
+      {/* Summary */}
+      <div className="metrics-grid metric-grid-4 animate-in animate-in-delay-1">
+        {summaryCards.map(card => {
           const Icon = card.icon;
           return (
-            <div key={i} className="metric-card">
-              <div className="metric-icon-wrap" style={{ color: card.color, background: card.bg }}>
-                <Icon size={18} />
-              </div>
+            <div key={card.label} className="metric-card" style={{ '--c': card.color }}>
+              <div className="metric-icon-wrap"><Icon size={19} /></div>
               <div>
-                <div className="metric-value" style={{ color: card.color }}>{card.value}</div>
+                <div className="metric-value">{String(card.value).padStart(2, '0')}</div>
                 <div className="metric-label">{card.label}</div>
               </div>
             </div>
@@ -80,147 +85,107 @@ export default function SecurityServicesView() {
         })}
       </div>
 
-      {/* Services Grid */}
-      <div className="animate-in animate-in-delay-2">
-        <div className="card-title" style={{ fontSize: '14px', marginBottom: '16px' }}>OUR SERVICES</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-          {services.map((s, idx) => {
-            const svcIcon = getServiceIcon(s.id);
-            const Icon = svcIcon.icon;
-            return (
-              <div key={s.id} className="card" style={{
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                animation: `fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s both`
-              }}>
-                <div>
-                  <div style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '42px', height: '42px', borderRadius: '10px',
-                        background: 'rgba(0, 0, 0, 0.3)', border: '1px solid var(--border-dim)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}>
-                        <Icon size={22} style={{ color: svcIcon.color }} />
+      {/* Services */}
+      <section className="animate-in animate-in-delay-2">
+        <div className="section-label">OUR SERVICES</div>
+
+        {loading ? (
+          <div className="service-grid">
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" />)}
+          </div>
+        ) : services.length === 0 ? (
+          <div className="card empty-state">
+            <ServerOff size={26} />
+            <strong style={{ color: 'var(--text-strong)' }}>Service registry unavailable</strong>
+            <span>Start the SOC API server (<span className="mono">npm run dev</span>) to load managed services.</span>
+          </div>
+        ) : (
+          <div className="service-grid">
+            {services.map((s, idx) => {
+              const meta = SERVICE_ICONS[s.id] || { icon: ShieldCheck, color: '#00ffd5' };
+              const Icon = meta.icon;
+              return (
+                <article
+                  key={s.id}
+                  className="card hud service-card"
+                  style={{ '--svc': meta.color, animation: `fadeInUp 0.5s var(--ease-out) ${idx * 0.05}s both` }}
+                >
+                  <div className="service-glow" aria-hidden="true" />
+                  <div style={{ position: 'relative' }}>
+                    <div className="service-head">
+                      <div style={{ display: 'flex', gap: '13px', minWidth: 0 }}>
+                        <div className="service-icon"><Icon size={22} /></div>
+                        <div style={{ minWidth: 0 }}>
+                          <h3 className="service-title">{s.title}</h3>
+                          <p className="service-desc">{s.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 600 }}>{s.title}</h3>
-                        <p style={{ fontSize: '11px', color: '#5a6577', marginTop: '2px' }}>{s.description}</p>
-                      </div>
+                      <span className={`badge ${statusBadgeClass(s.status)}`}>{s.badge}</span>
                     </div>
-                    <span className={`badge ${s.status === 'ACTIVE' || s.status === 'ONLINE' ? 'badge-active' : s.status === 'SCHEDULED' ? 'badge-high' : 'badge-medium'}`}>
-                      {s.badge}
-                    </span>
+
+                    {s.progress !== undefined && (
+                      <div style={{ marginTop: '18px' }}>
+                        <div className="kv-line" style={{ marginTop: 0, marginBottom: '6px' }}>
+                          <span>Progress</span>
+                          <strong style={{ color: 'var(--text-strong)' }}>{s.progress}%</strong>
+                        </div>
+                        <div className="progress"><div style={{ width: `${s.progress}%` }} /></div>
+                      </div>
+                    )}
+
+                    {s.nextRun && (
+                      <div className="kv-line"><span>Next run</span><strong style={{ color: '#ff9100' }}>{s.nextRun}</strong></div>
+                    )}
+                    {s.uptime && (
+                      <div className="kv-line"><span>Uptime</span><strong style={{ color: '#00e676' }}>{s.uptime}</strong></div>
+                    )}
+                    {s.compliance && (
+                      <div className="kv-line"><span>Compliance</span><strong style={{ color: 'var(--accent-cyan)' }}>{s.compliance}</strong></div>
+                    )}
                   </div>
 
-                  {s.progress !== undefined && (
-                    <div style={{ marginTop: '16px' }}>
-                      <div style={{
-                        display: 'flex', justifyContent: 'space-between',
-                        fontSize: '11px', color: '#5a6577', marginBottom: '4px'
-                      }}>
-                        <span>Progress</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.progress}%</span>
-                      </div>
-                      <div style={{
-                        width: '100%', height: '5px', background: 'rgba(255, 255, 255, 0.04)',
-                        borderRadius: '3px', overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          width: `${s.progress}%`, height: '100%',
-                          background: 'linear-gradient(90deg, var(--accent-cyan), #00b0ff)',
-                          transition: 'width 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
-                        }} />
-                      </div>
-                    </div>
-                  )}
+                  <div className="service-foot">
+                    <span>LAST RUN · {s.lastRun}</span>
+                    <button className="btn-cyber-outline" onClick={() => handleTrigger(s.id)} disabled={triggeringId === s.id}>
+                      <PlayCircle size={13} className={triggeringId === s.id ? 'spin' : undefined} />
+                      {triggeringId === s.id ? 'Running...' : 'Run Scan'}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-                  {s.nextRun && (
-                    <div style={{
-                      marginTop: '12px', fontSize: '12px', color: '#5a6577',
-                      display: 'flex', justifyContent: 'space-between'
-                    }}>
-                      <span>Next Run:</span>
-                      <span style={{ color: '#ff9100', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{s.nextRun}</span>
-                    </div>
-                  )}
-
-                  {s.uptime && (
-                    <div style={{
-                      marginTop: '12px', fontSize: '12px', color: '#5a6577',
-                      display: 'flex', justifyContent: 'space-between'
-                    }}>
-                      <span>Uptime:</span>
-                      <span style={{ color: '#00e676', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{s.uptime}</span>
-                    </div>
-                  )}
-
-                  {s.compliance && (
-                    <div style={{
-                      marginTop: '12px', fontSize: '12px', color: '#5a6577',
-                      display: 'flex', justifyContent: 'space-between'
-                    }}>
-                      <span>Compliance:</span>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{s.compliance}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div style={{
-                  marginTop: '20px', paddingTop: '14px',
-                  borderTop: '1px solid var(--border-dim)',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                }}>
-                  <span style={{ fontSize: '11px', color: '#3d4a5c', fontFamily: 'var(--font-mono)' }}>
-                    Last: {s.lastRun}
-                  </span>
-                  <button className="btn-cyber-outline" onClick={() => handleTrigger(s.id)} disabled={triggeringId === s.id}>
-                    <PlayCircle size={13} /> {triggeringId === s.id ? 'Running...' : 'Run Scan'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }} className="animate-in animate-in-delay-3">
-        <div className="card">
-          <div className="card-title">RECENT SECURITY ACTIVITY</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              { text: 'Vulnerability scan completed', time: '2 min ago', icon: CheckCircle, color: '#00e676' },
-              { text: 'Suspicious login attempt blocked', time: '12 min ago', icon: CheckCircle, color: '#00b0ff' },
-              { text: 'Malware detected and quarantined', time: '29 min ago', icon: CheckCircle, color: '#ff1744' },
-            ].map((item, i) => {
+      {/* Bottom */}
+      <div className="grid-2-1 animate-in animate-in-delay-3">
+        <section className="card">
+          <div className="card-title">
+            <span className="card-title-left"><Activity size={14} /> RECENT SECURITY ACTIVITY</span>
+            <span className="card-title-meta">LAST 30 MIN</span>
+          </div>
+          <div className="stack-sm">
+            {RECENT_ACTIVITY.map((item, i) => {
               const EIcon = item.icon;
               return (
-                <div key={i} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 12px', background: 'rgba(0, 0, 0, 0.25)',
-                  borderRadius: '8px', border: '1px solid var(--border-dim)'
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#c8d0dc', fontSize: '12px' }}>
-                    <EIcon size={14} style={{ color: item.color }} /> {item.text}
-                  </span>
-                  <span style={{ fontSize: '10px', color: '#3d4a5c', fontFamily: 'var(--font-mono)' }}>{item.time}</span>
+                <div key={i} className="event-row">
+                  <span className="event-icon" style={{ '--c': item.color }}><EIcon size={14} /></span>
+                  <span className="event-text">{item.text}</span>
+                  <span className="event-time">{item.time}</span>
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card-title" style={{ alignSelf: 'stretch' }}>SERVICE STATUS</div>
-          <div style={{
-            fontFamily: 'var(--font-display)', fontSize: '36px',
-            fontWeight: 900, color: '#00e676',
-            textShadow: '0 0 20px rgba(0, 230, 118, 0.3)'
-          }}>98.4%</div>
-          <div style={{ fontSize: '11px', color: '#5a6577', marginTop: '4px' }}>Overall SOC Health</div>
-        </div>
+        <section className="card hud" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="card-title" style={{ alignSelf: 'stretch' }}>
+            <span className="card-title-left"><CheckCircle size={14} /> SERVICE STATUS</span>
+          </div>
+          <RadialGauge value={98.4} decimals={1} size={150} label="SOC HEALTH" />
+          <div className="muted" style={{ fontSize: '12px', marginTop: '10px' }}>Overall SOC health across all services</div>
+        </section>
       </div>
     </div>
   );
