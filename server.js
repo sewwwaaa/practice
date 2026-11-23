@@ -15,12 +15,26 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'zerolock-super-secret-key-12345';
 const MONGO_URI = process.env.MONGO_URI;
 
+// Retries cover transient DNS/network blips (e.g. "querySrv ENOTFOUND") at startup.
+const connectToMongo = async (attempt = 1, maxAttempts = 5) => {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log('✅ Connected to MongoDB successfully');
+  } catch (err) {
+    if (attempt >= maxAttempts) {
+      console.error(`❌ MongoDB connection failed after ${maxAttempts} attempts:`, err.message);
+      return;
+    }
+    const delayMs = attempt * 3000;
+    console.warn(`⚠️  MongoDB connection attempt ${attempt} failed (${err.message}). Retrying in ${delayMs / 1000}s...`);
+    setTimeout(() => connectToMongo(attempt + 1, maxAttempts), delayMs);
+  }
+};
+
 if (!MONGO_URI) {
   console.error('❌ [CONFIG ERROR] MONGO_URI is not defined in environment variables (.env)');
 } else {
-  mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ Connected to MongoDB successfully'))
-    .catch(err => console.error('❌ MongoDB connection error:', err));
+  connectToMongo();
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -604,7 +618,12 @@ app.get('/api/terminal/logs', (req, res) => {
   });
 });
 
+// Health check for the load balancer — MUST stay above the catch-all '*' route.
+// Returns a plain 200 "OK" so the ALB target group marks this instance healthy.
+app.get('/health', (req, res) => res.status(200).send('OK'));
+
 // Catch-all route to serve SPA index.html for non-API routes
+app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
     if (err) {
