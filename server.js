@@ -618,10 +618,6 @@ app.get('/api/terminal/logs', (req, res) => {
   });
 });
 
-// Health check for the load balancer — MUST stay above the catch-all '*' route.
-// Returns a plain 200 "OK" so the ALB target group marks this instance healthy.
-app.get('/health', (req, res) => res.status(200).send('OK'));
-
 // Catch-all route to serve SPA index.html for non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
